@@ -2,6 +2,7 @@ package webdriver
 
 type Browser struct {
 	sessionID string
+	client    Client
 
 	cookies *Cookies
 	window  *Window
@@ -22,4 +23,12 @@ func (b *Browser) Window() *Window {
 
 func (b *Browser) Element() *Element {
 	return b.element
+}
+
+func NewBrowser(addr string, desired, required Capabilities) (*Browser, error) {
+	return &Browser{
+		cookies: &Cookies{sessionID: ""},
+		window:  &Window{sessionID: ""},
+		element: &Element{sessionID: ""},
+	}, nil
 }

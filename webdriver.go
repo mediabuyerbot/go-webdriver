@@ -70,18 +70,7 @@ var statusCode = map[int]string{
 
 type Capabilities map[string]interface{}
 
-type Webdriver struct {
-	client Client
-}
-
-func (w *Webdriver) NewBrowser() (*Browser, error) {
-	return &Browser{
-		cookies: &Cookies{sessionID: ""},
-		window:  &Window{sessionID: ""},
-		element: &Element{sessionID: ""},
-	}, nil
-}
-
-func (w *Webdriver) Close() error {
-	return nil
-}
+var (
+	DefaultDesiredLinuxCapabilities  = Capabilities{}
+	DefaultRequiredLinuxCapabilities = Capabilities{}
+)
