@@ -125,7 +125,7 @@ func (d *chromeDriver) Run(ctx context.Context) error {
 	return nil
 }
 
-func (d *chromeDriver) Stop(ctx context.Context) error {
+func (d *chromeDriver) Stop(_ context.Context) error {
 	if d.proc == nil {
 		return ErrChromeDriverNotRunning
 	}
