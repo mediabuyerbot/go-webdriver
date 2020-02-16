@@ -1,4 +1,4 @@
-package process
+package chromedriver
 
 import (
 	"context"
@@ -12,7 +12,7 @@ func TestDefaultChromeDriverWithRunAndStop(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ch := NewChromeDriver()
+	ch := New()
 	go func() {
 		if err := ch.Run(ctx); err != nil {
 			t.Log(ch.Out())
@@ -20,7 +20,7 @@ func TestDefaultChromeDriverWithRunAndStop(t *testing.T) {
 		}
 	}()
 
-	<-time.After(time.Second * 5)
+	<-time.After(time.Second * 2)
 
 	if err := ch.Stop(ctx); err != nil {
 		t.Log(ch.Out())
