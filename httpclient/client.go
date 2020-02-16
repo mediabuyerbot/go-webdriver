@@ -1,4 +1,4 @@
-package webdriver
+package httpclient
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gojek/valkyrie"
@@ -73,6 +75,7 @@ type ErrorHook func(req *http.Request, err error, retry int)
 
 // HttpClient is the http client implementation
 type HttpClient struct {
+	baseURL      *url.URL
 	client       *http.Client
 	retryCount   int
 	requestHook  RequestHook
@@ -84,19 +87,25 @@ type HttpClient struct {
 }
 
 // NewClient returns a new instance of http Client
-func NewClient(opts ...Option) Client {
+func NewClient(baseURL string, opts ...Option) (Client, error) {
+	if !strings.HasPrefix(baseURL, "http") {
+		baseURL = "http://" + baseURL
+	}
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, err
+	}
 	client := HttpClient{
+		baseURL:    u,
 		retryCount: defaultRetryCount,
 		client: &http.Client{
 			Timeout: defaultHTTPTimeout,
 		},
 	}
-
 	for _, opt := range opts {
 		opt(&client)
 	}
-
-	return &client
+	return &client, nil
 }
 
 // Get makes a HTTP GET request to provided URL
@@ -240,60 +249,4 @@ func (c *HttpClient) Do(req *http.Request) (resp *http.Response, err error) {
 	}
 
 	return resp, multiErr.HasError()
-}
-
-type Option func(client *HttpClient)
-
-func WithHTTPTimeout(timeout time.Duration) Option {
-	return func(c *HttpClient) {
-		c.client.Timeout = timeout
-	}
-}
-
-func WithHTTPRetryCount(retryCount int) Option {
-	return func(c *HttpClient) {
-		c.retryCount = retryCount
-	}
-}
-
-func WithHTTPTransport(t *http.Transport) Option {
-	return func(c *HttpClient) {
-		c.client.Transport = t
-	}
-}
-
-func WithHTTPRequestHook(rh RequestHook) Option {
-	return func(c *HttpClient) {
-		c.requestHook = rh
-	}
-}
-
-func WithHTTPResponseHook(rh ResponseHook) Option {
-	return func(c *HttpClient) {
-		c.responseHook = rh
-	}
-}
-
-func WithHTTPCheckRetry(cr CheckRetry) Option {
-	return func(c *HttpClient) {
-		c.checkRetry = cr
-	}
-}
-
-func WithHTTPBackoff(b Backoff) Option {
-	return func(c *HttpClient) {
-		c.backoff = b
-	}
-}
-
-func WithHTTPErrorHook(eh ErrorHook) Option {
-	return func(c *HttpClient) {
-		c.errorHook = eh
-	}
-}
-
-func WithHTTPErrorHandler(eh ErrorHandler) Option {
-	return func(c *HttpClient) {
-		c.errorHandler = eh
-	}
 }

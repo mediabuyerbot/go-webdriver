@@ -1,6 +1,8 @@
-package webdriver
+package protocol
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type StackFrame struct {
 	FileName   string

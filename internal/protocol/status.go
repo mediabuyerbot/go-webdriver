@@ -1,4 +1,4 @@
-package webdriver
+package protocol
 
 const (
 	Success                    = 0
