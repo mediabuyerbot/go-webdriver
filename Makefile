@@ -1,4 +1,3 @@
-
 .PHONY: dep
 dep: ## Install dependencies
 	@go mod download
