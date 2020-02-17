@@ -1,6 +1,7 @@
 package webdriver
 
 import (
+	"context"
 	"time"
 
 	"github.com/mediabuyerbot/go-webdriver/httpclient"
@@ -38,4 +39,12 @@ func NewBrowser(addr string, desired, required protocol.Capabilities) (*Browser,
 		return nil, err
 	}
 	return NewBrowserFromClient(client, desired, required)
+}
+
+func (b *Browser) Session() *protocol.Session {
+	return b.session
+}
+
+func (b *Browser) Close(ctx context.Context) error {
+	return b.session.Delete(ctx)
 }
