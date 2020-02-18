@@ -60,6 +60,11 @@ func NewSession(client Client, desired, required Capabilities) (*Session, error)
 	}, nil
 }
 
+// ID returns the session id.
+func (s *Session) ID() string {
+	return s.id
+}
+
 // Capabilities returns the capabilities of the specified session.
 func (s *Session) Capabilities() Capabilities {
 	return s.cap

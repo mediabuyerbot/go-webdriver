@@ -72,6 +72,9 @@ func (c *httpClient) Get(ctx context.Context, path string) (resp *Response, err 
 }
 
 func (c *httpClient) Post(ctx context.Context, path string, params interface{}) (resp *Response, err error) {
+	if params == nil {
+		params = map[string]interface{}{}
+	}
 	payload, err := json.Marshal(params)
 	if err != nil {
 		return nil, err

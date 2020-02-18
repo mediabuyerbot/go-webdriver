@@ -14,7 +14,8 @@ const (
 )
 
 type Browser struct {
-	session *protocol.Session
+	session    *protocol.Session
+	navigation *protocol.Navigation
 }
 
 func NewBrowserFromClient(client httpclient.Client, desired, required protocol.Capabilities) (*Browser, error) {
@@ -25,7 +26,8 @@ func NewBrowserFromClient(client httpclient.Client, desired, required protocol.C
 	}
 
 	browser := Browser{
-		session: sess,
+		session:    sess,
+		navigation: protocol.NewNavigation(cli, sess.ID()),
 	}
 	return &browser, nil
 }
@@ -43,6 +45,10 @@ func NewBrowser(addr string, desired, required protocol.Capabilities) (*Browser,
 
 func (b *Browser) Session() *protocol.Session {
 	return b.session
+}
+
+func (b *Browser) Navigation() *protocol.Navigation {
+	return b.navigation
 }
 
 func (b *Browser) Close(ctx context.Context) error {
