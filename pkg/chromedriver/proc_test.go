@@ -3,6 +3,7 @@ package chromedriver
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/mitchellh/go-ps"
 	"github.com/stretchr/testify/assert"
@@ -30,6 +31,8 @@ func TestRunAndStop(t *testing.T) {
 	proc, err := ps.FindProcess(pid)
 	assert.Nil(t, err)
 	assert.Equal(t, proc.Pid(), pid)
+
+	time.Sleep(500 * time.Millisecond)
 
 	if err := driver.Stop(ctx); err != nil {
 		t.Fatal(err)

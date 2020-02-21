@@ -1,8 +1,10 @@
 package chromedriver
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
@@ -10,9 +12,6 @@ import (
 
 	"github.com/mitchellh/go-homedir"
 )
-
-type LogLevel string
-type Hook func(pid int)
 
 const (
 	DefaultCommand   = "chromedriver"
@@ -36,6 +35,19 @@ var (
 	ErrChromeDriverAlreadyRunning = errors.New("chromedriver: chromedriver already running")
 	ErrChromeDriverNotRunning     = errors.New("chromedriver: chromedriver not running")
 )
+
+type LogLevel string
+type Hook func(pid int)
+
+type Error struct {
+	Err    error
+	Stdout string
+}
+
+func (e Error) Error() string {
+	return fmt.Sprintf("%v %s",
+		e.Err, e.Stdout)
+}
 
 type ChromeDriver struct {
 	// base URL path prefix for commands, e.g. wd/url
@@ -96,9 +108,14 @@ func (d *ChromeDriver) Run(ctx context.Context) error {
 		d.logPath = home + DefaultLogPath
 	}
 
+	var out bytes.Buffer
 	d.cmd = exec.Command(d.path, args...)
+	d.cmd.Stderr = &out
 	if err := d.cmd.Start(); err != nil {
-		return err
+		return Error{
+			Err:    err,
+			Stdout: out.String(),
+		}
 	}
 
 	pid := d.cmd.Process.Pid
@@ -118,7 +135,10 @@ func (d *ChromeDriver) Run(ctx context.Context) error {
 		return err
 	case err := <-done:
 		if err != nil {
-			return err
+			return Error{
+				Err:    err,
+				Stdout: out.String(),
+			}
 		}
 		if d.onCloseHook != nil {
 			d.onCloseHook(pid)
