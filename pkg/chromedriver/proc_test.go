@@ -3,27 +3,35 @@ package chromedriver
 import (
 	"context"
 	"testing"
-	"time"
+
+	"github.com/mitchellh/go-ps"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestDefaultChromeDriverWithRunAndStop(t *testing.T) {
+func TestRunAndStop(t *testing.T) {
 	if t.Skipped() {
 		return
 	}
 
 	ctx := context.Background()
-	ch := New()
+	onstart := make(chan int)
+	driver := New(
+		WithOnStartHook(func(pid int) {
+			onstart <- pid
+		}),
+	)
 	go func() {
-		if err := ch.Run(ctx); err != nil {
-			t.Log(ch.Out())
+		if err := driver.Run(ctx); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	<-time.After(time.Second * 2)
+	pid := <-onstart
+	proc, err := ps.FindProcess(pid)
+	assert.Nil(t, err)
+	assert.Equal(t, proc.Pid(), pid)
 
-	if err := ch.Stop(ctx); err != nil {
-		t.Log(ch.Out())
+	if err := driver.Stop(ctx); err != nil {
 		t.Fatal(err)
 	}
 }

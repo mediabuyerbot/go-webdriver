@@ -1,7 +1,6 @@
 package chromedriver
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -13,6 +12,7 @@ import (
 )
 
 type LogLevel string
+type Hook func(pid int)
 
 const (
 	DefaultCommand   = "chromedriver"
@@ -43,6 +43,9 @@ type ChromeDriver struct {
 	path    string
 	threads int
 
+	onStartHook Hook
+	onCloseHook Hook
+
 	logPath  string
 	logLevel LogLevel
 
@@ -50,8 +53,7 @@ type ChromeDriver struct {
 	port         int
 	adbPort      int
 	host         string
-	proc         *exec.Cmd
-	out          bytes.Buffer
+	cmd          *exec.Cmd
 }
 
 func New(opts ...Option) *ChromeDriver {
@@ -71,12 +73,8 @@ func New(opts ...Option) *ChromeDriver {
 	return cd
 }
 
-func (d *ChromeDriver) Out() bytes.Buffer {
-	return d.out
-}
-
 func (d *ChromeDriver) Run(ctx context.Context) error {
-	if d.proc != nil {
+	if d.cmd != nil {
 		return ErrChromeDriverAlreadyRunning
 	}
 
@@ -98,19 +96,22 @@ func (d *ChromeDriver) Run(ctx context.Context) error {
 		d.logPath = home + DefaultLogPath
 	}
 
-	d.proc = exec.Command(d.path, args...)
-	d.proc.Stdout = &d.out
-	if err := d.proc.Start(); err != nil {
+	d.cmd = exec.Command(d.path, args...)
+	if err := d.cmd.Start(); err != nil {
 		return err
 	}
 
+	pid := d.cmd.Process.Pid
 	done := make(chan error, 1)
 	go func() {
-		done <- d.proc.Wait()
+		if d.onStartHook != nil {
+			d.onStartHook(pid)
+		}
+		done <- d.cmd.Wait()
 	}()
 	select {
 	case <-ctx.Done():
-		err := d.proc.Process.Kill()
+		err := d.cmd.Process.Kill()
 		if err == nil {
 			return ErrTimeOut
 		}
@@ -119,16 +120,19 @@ func (d *ChromeDriver) Run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		if d.onCloseHook != nil {
+			d.onCloseHook(pid)
+		}
 	}
 	return nil
 }
 
 func (d *ChromeDriver) Stop(_ context.Context) error {
-	if d.proc == nil {
+	if d.cmd == nil {
 		return ErrChromeDriverNotRunning
 	}
 	defer func() {
-		d.proc = nil
+		d.cmd = nil
 	}()
-	return d.proc.Process.Signal(os.Interrupt)
+	return d.cmd.Process.Signal(os.Interrupt)
 }

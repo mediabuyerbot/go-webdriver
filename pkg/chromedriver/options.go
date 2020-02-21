@@ -1,53 +1,67 @@
 package chromedriver
 
-import "time"
+import (
+	"time"
+)
 
 type Option func(cd *ChromeDriver)
 
-func WithChromeDriverStartTime(duration time.Duration) Option {
+func WithStartTime(duration time.Duration) Option {
 	return func(cd *ChromeDriver) {
 		cd.startTimeout = duration
 	}
 }
 
-func WithChromeDriverThreads(threads int) Option {
+func WithThreads(threads int) Option {
 	return func(cd *ChromeDriver) {
 		cd.threads = threads
 	}
 }
 
-func WithChromeDriverPort(port int) Option {
+func WithPort(port int) Option {
 	return func(cd *ChromeDriver) {
 		cd.port = port
 	}
 }
 
-func WithChromeDriverAdbPort(port int) Option {
+func WithAdbPort(port int) Option {
 	return func(cd *ChromeDriver) {
 		cd.adbPort = port
 	}
 }
 
-func WithChromeDriverHost(host string) Option {
+func WithHost(host string) Option {
 	return func(cd *ChromeDriver) {
 		cd.host = host
 	}
 }
 
-func WithChromeDriverCommand(cmd string) Option {
+func WithCommand(cmd string) Option {
 	return func(cd *ChromeDriver) {
 		cd.path = cmd
 	}
 }
 
-func WithChromeDriverBaseURL(baseURL string) Option {
+func WithBaseURL(baseURL string) Option {
 	return func(cd *ChromeDriver) {
 		cd.baseURL = baseURL
 	}
 }
 
-func WithChromeDriverLogLevel(logLevel LogLevel) Option {
+func WithLogLevel(logLevel LogLevel) Option {
 	return func(cd *ChromeDriver) {
 		cd.logLevel = logLevel
+	}
+}
+
+func WithOnStartHook(h Hook) Option {
+	return func(cd *ChromeDriver) {
+		cd.onStartHook = h
+	}
+}
+
+func WithOnCloseHook(h Hook) Option {
+	return func(cd *ChromeDriver) {
+		cd.onCloseHook = h
 	}
 }
