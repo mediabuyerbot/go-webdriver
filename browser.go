@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/mediabuyerbot/go-webdriver/httpclient"
 	"github.com/mediabuyerbot/go-webdriver/internal/protocol"
+	"github.com/mediabuyerbot/go-webdriver/pkg/httpclient"
 )
 
 const (

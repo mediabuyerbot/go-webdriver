@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/mediabuyerbot/go-webdriver/httpclient"
+	"github.com/mediabuyerbot/go-webdriver/pkg/httpclient"
 )
 
 type Client interface {

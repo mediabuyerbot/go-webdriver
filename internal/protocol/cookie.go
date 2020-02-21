@@ -1,6 +1,6 @@
 package protocol
 
-import "github.com/mediabuyerbot/go-webdriver/httpclient"
+import "github.com/mediabuyerbot/go-webdriver/pkg/httpclient"
 
 type Cookie struct {
 	Name   string
