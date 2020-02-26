@@ -5,7 +5,18 @@ networks:
     driver: bridge
 
 services:
+  chromedriver:
+    image: robcherry/docker-chromedriver:latest
+    environment:
+      CHROMEDRIVER_WHITELISTED_IPS: ''
+    ports:
+      - 9594:4444
+    networks:
+      - go-webdriver-int-test
+
   go-webdriver:
+    depends_on:
+      - chromedriver
     build:
       context: .
     volumes:
