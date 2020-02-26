@@ -1,7 +1,7 @@
 version: '3'
 
 networks:
-  go-webdriver-int-test:
+  go-webdriver-net:
     driver: bridge
 
 services:
@@ -12,7 +12,7 @@ services:
     ports:
       - 9594:4444
     networks:
-      - go-webdriver-int-test
+      - go-webdriver-net
 
   go-webdriver:
     depends_on:
@@ -22,4 +22,4 @@ services:
     volumes:
       - $PWD:/go/src/github.com/mediabuyerbot/go-webdriver
     networks:
-      - go-webdriver-int-test
+      - go-webdriver-net
