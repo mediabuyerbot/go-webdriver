@@ -14,9 +14,17 @@ services:
     networks:
       - go-webdriver-net
 
+  firefoxdriver:
+    image: wakaba/docker-firefoxdriver:stable
+    ports:
+      - 9595:9516
+    networks:
+      - go-webdriver-net
+
   go-webdriver:
     depends_on:
       - chromedriver
+      - firefoxdriver
     build:
       context: .
     volumes:
