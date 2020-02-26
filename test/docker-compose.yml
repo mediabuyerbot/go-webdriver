@@ -1,0 +1,14 @@
+version: '3'
+
+networks:
+  go-webdriver-int-test:
+    driver: bridge
+
+services:
+  go-webdriver:
+    build:
+      context: .
+    volumes:
+      - $PWD:/go/src/github.com/mediabuyerbot/go-webdriver
+    networks:
+      - go-webdriver-int-test

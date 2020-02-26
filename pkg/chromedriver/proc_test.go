@@ -28,6 +28,8 @@ func TestRunAndStop(t *testing.T) {
 	}()
 
 	pid := <-onstart
+
+	time.Sleep(500 * time.Millisecond)
 	proc, err := ps.FindProcess(pid)
 	assert.Nil(t, err)
 	assert.Equal(t, proc.Pid(), pid)
