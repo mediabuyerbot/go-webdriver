@@ -1,4 +1,8 @@
-version: '3'
+version: '3.4'
+
+x-common-env: &env
+  WEBGO_CHROMEDRIVER_ADDR: 9594
+  WEBGO_FIREFOXDRIVER_ADDR: 9595
 
 networks:
   go-webdriver-net:
@@ -22,6 +26,8 @@ services:
       - go-webdriver-net
 
   go-webdriver:
+    environment:
+        *env
     depends_on:
       - chromedriver
       - firefoxdriver

@@ -2,10 +2,11 @@ package test
 
 import (
 	"testing"
-	"time"
 )
 
 func TestSessionChromedriver(t *testing.T) {
+	// log.Println(os.Getenv("WEBGO_CHROMEDRIVER_ADDR"))
+	// log.Println(os.Getenv("WEBGO_FIREFOXDRIVER_ADDR"))
 	t.Log("session_chromedriver_test")
-	time.Sleep(3 * time.Second)
+	//:w:time.Sleep(3 * time.Second)
 }
