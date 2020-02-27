@@ -20,21 +20,20 @@ type Client interface {
 type params map[string]interface{}
 
 type httpClient struct {
-	client httpclient.Client
+	client  httpclient.Client
+	Headers http.Header
 }
 
 func NewClient(client httpclient.Client) Client {
+	headers := make(http.Header)
+	headers.Add("Content-Type", "application/json;charset=utf-8")
+	headers.Add("Accept", "application/json")
+	headers.Add("Accept-charset", "utf-8")
+	headers.Add("Cache-Control", "no-cache")
 	return &httpClient{
-		client: client,
+		client:  client,
+		Headers: headers,
 	}
-}
-
-func (c *httpClient) defaultHeader() http.Header {
-	header := make(http.Header)
-	header.Add("Content-Type", "application/json;charset=utf-8")
-	header.Add("Accept", "application/json")
-	header.Add("Accept-charset", "utf-8")
-	return header
 }
 
 func (c *httpClient) handleResponse(r *http.Response) (resp *Response, err error) {
@@ -55,7 +54,7 @@ func (c *httpClient) handleResponse(r *http.Response) (resp *Response, err error
 }
 
 func (c *httpClient) Delete(ctx context.Context, path string) (resp *Response, err error) {
-	httpResp, err := c.client.Delete(ctx, path, c.defaultHeader())
+	httpResp, err := c.client.Delete(ctx, path, c.Headers)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +62,7 @@ func (c *httpClient) Delete(ctx context.Context, path string) (resp *Response, e
 }
 
 func (c *httpClient) Get(ctx context.Context, path string) (resp *Response, err error) {
-	httpResp, err := c.client.Get(ctx, path, c.defaultHeader())
+	httpResp, err := c.client.Get(ctx, path, c.Headers)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +77,7 @@ func (c *httpClient) Post(ctx context.Context, path string, params interface{}) 
 	if err != nil {
 		return nil, err
 	}
-	httpResp, err := c.client.Post(ctx, path, bytes.NewReader(payload), c.defaultHeader())
+	httpResp, err := c.client.Post(ctx, path, bytes.NewReader(payload), c.Headers)
 	if err != nil {
 		return nil, err
 	}

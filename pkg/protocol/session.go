@@ -20,7 +20,6 @@ var (
 
 type (
 	// Session represents the connection between a local end and a specific remote end.
-	// https://www.w3.org/TR/webdriver1/#sessions
 	Session struct {
 		id     string
 		client Client
@@ -32,9 +31,8 @@ type (
 )
 
 // NewSession creates a new instance of Session.
-// The New Session command creates a new WebDriver session with the endpoint node. If the creation fails,
+// The new session command creates a new WebDriver session with the endpoint node. If the creation fails,
 // a session not created error is returned.
-// https://www.w3.org/TR/webdriver1/#new-session
 func NewSession(client Client, desired, required interface{}) (*Session, error) {
 	if desired == nil {
 		desired = map[string]interface{}{}
