@@ -62,4 +62,12 @@ func TestSessionFirefoxdriverSessionCapabilities(t *testing.T) {
 	// session id
 	assert.NotEmpty(t, b.SessionID())
 
+	// capabilities
+	cap := b.Session().Capabilities()
+	assert.Equal(t, cap["browserName"].(string), "firefox", "browserName")
+
+	// session status
+	status, err := b.Session().Status(ctx)
+	assert.Nil(t, err, "session get status")
+	assert.False(t, status["ready"].(bool))
 }

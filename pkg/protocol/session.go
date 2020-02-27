@@ -155,7 +155,6 @@ func (s *Session) Delete(ctx context.Context) error {
 // Status returns information about whether a remote end is in a state
 // in which it can create new sessions, but may additionally include arbitrary
 // meta information that is specific to the implementation.
-// https://www.w3.org/TR/webdriver1/#status
 func (s *Session) Status(ctx context.Context) (st Status, err error) {
 	resp, err := s.client.Get(ctx, "/status")
 	if err != nil {
