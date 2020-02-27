@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/mediabuyerbot/go-webdriver/pkg/httpclient"
 )
@@ -41,15 +44,14 @@ func (c *httpClient) handleResponse(r *http.Response) (resp *Response, err error
 	if err != nil {
 		return nil, err
 	}
-	resp = &Response{}
-	err = json.Unmarshal(buf, resp)
-	if err != nil && r.StatusCode == 200 {
+	log.Println("JSON", string(buf))
+	if err := json.Unmarshal(buf, &resp); err != nil {
 		return nil, err
 	}
 	if r.StatusCode >= 400 || resp.Status != 0 {
-		return nil, parseError(r.StatusCode, *resp)
+		return nil, parseError(r.StatusCode, resp)
 	}
-	resp.SessionID = bytes.Trim(resp.SessionID, "{}\"")
+	resp.SessionID = strings.Trim(resp.SessionID, "{}\"")
 	return resp, nil
 }
 
@@ -91,62 +93,61 @@ type StackFrame struct {
 	LineNumber int
 }
 
-type CommandError struct {
-	StatusCode int
-	ErrorType  string
-	Message    string
-	Screen     string
-	Class      string
-	StackTrace []StackFrame
+type Error struct {
+	Code       string      `json:"error"`
+	Message    string      `json:"message"`
+	StackTrace string      `json:"stacktrace"`
+	Data       interface{} `json:"data"`
 }
 
-func (e CommandError) Error() string {
-	m := e.ErrorType
-	if m != "" {
-		m += ": "
-	}
-	if e.StatusCode == -1 {
-		m += "status code not specified"
-	} else if str, found := statusCode[e.StatusCode]; found {
-		m += str + ": " + e.Message
-	} else {
-		m += fmt.Sprintf("unknown status code (%d): %s", e.StatusCode, e.Message)
-	}
-	return m
+func (e Error) Error() string {
+	return fmt.Sprintf("%s %s", e.Message, e.Code)
 }
 
 type Response struct {
-	SessionID json.RawMessage `json:"sessionId"`
+	SessionID string          `json:"sessionId"`
 	Status    int             `json:"status"`
 	Value     json.RawMessage `json:"value"`
 }
 
-func parseError(code int, resp Response) error {
-	var responseCodeError string
+func parseError(respStatusCode int, resp *Response) error {
+	var (
+		sc  = httpStatusCode(respStatusCode)
+		msg string
+	)
+	// if status exists
+	if resp.Status > 0 {
+		sm, ok := statusCode[resp.Status]
+		if ok {
+			sc = strconv.Itoa(resp.Status)
+			msg = sm
+		}
+	}
+	cmdErr := &Error{
+		Code:    sc,
+		Message: msg,
+	}
+	if err := json.Unmarshal(resp.Value, cmdErr); err != nil {
+		cmdErr.Message = string(resp.Value)
+	}
+	if len(cmdErr.Message) == 0 {
+		cmdErr.Message = cmdErr.Code
+	}
+	return cmdErr
+}
+
+func httpStatusCode(code int) (s string) {
 	switch code {
-	// workaround: chromedriver could returns 200 code on errors
-	case 200:
-	case 400:
-		responseCodeError = "400: Missing Command Parameters"
+	case 200, 400:
+		s = StatusMissingCommandParameters
 	case 404:
-		responseCodeError = "404: Unknown command/Resource Not Found"
+		s = StatusUnknownCommand
 	case 405:
-		responseCodeError = "405: Invalid Command Method"
+		s = StatusInvalidCommandMethod
 	case 500:
-		responseCodeError = "500: Failed Command"
+		s = StatusFailedCommand
 	case 501:
-		responseCodeError = "501: Unimplemented Command"
-	default:
-		responseCodeError = "Unknown error"
+		s = StatusUnimplementedCommand
 	}
-	if resp.Status == 0 {
-		return &CommandError{StatusCode: -1, ErrorType: responseCodeError}
-	}
-	commandError := &CommandError{StatusCode: resp.Status, ErrorType: responseCodeError}
-	err := json.Unmarshal(resp.Value, commandError)
-	if err != nil {
-		// workaround: firefox could returns a string instead of a JSON object on errors
-		commandError.Message = string(resp.Value)
-	}
-	return commandError
+	return s
 }

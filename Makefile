@@ -15,4 +15,5 @@ int-test: dep
 
 mocks: dep
 	mockgen -package=protocol -destination=pkg/protocol/client_${MOCK_POSTFIX}.go -source=pkg/protocol/client.go
+	mockgen -package=httpclient -destination=pkg/httpclient/client_${MOCK_POSTFIX}.go -source=pkg/httpclient/client.go
 

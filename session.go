@@ -50,6 +50,10 @@ func NewSession(addr string, d DesiredCapabilities, r RequiredCapabilities) (*Se
 	return NewSessionFromClient(client, d, r)
 }
 
+func (b *Session) SessionID() string {
+	return b.session.ID()
+}
+
 func (b *Session) Session() *protocol.Session {
 	return b.session
 }

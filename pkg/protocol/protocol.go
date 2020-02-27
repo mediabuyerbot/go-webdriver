@@ -40,6 +40,14 @@ const (
 	CapabilityUnhandledPromptBehavior = "unhandledPromptBehavior"
 )
 
+const (
+	StatusMissingCommandParameters = "400: Missing Command Parameters"
+	StatusUnknownCommand           = "404: Unknown command/Resource Not Found"
+	StatusInvalidCommandMethod     = "405: Invalid Command Method"
+	StatusFailedCommand            = "500: Failed Command"
+	StatusUnimplementedCommand     = "501: Unimplemented Command"
+)
+
 var statusCode = map[int]string{
 	SuccessStatusCode:                    "The command executed successfully.",
 	NoSuchDriverStatusCode:               "A session is either terminated or not started.",
@@ -69,3 +77,16 @@ var statusCode = map[int]string{
 }
 
 type Capabilities map[string]interface{}
+
+func copyCap(m map[string]interface{}) Capabilities {
+	cp := make(Capabilities)
+	for k, v := range m {
+		vm, ok := v.(map[string]interface{})
+		if ok {
+			cp[k] = copyCap(vm)
+		} else {
+			cp[k] = v
+		}
+	}
+	return cp
+}

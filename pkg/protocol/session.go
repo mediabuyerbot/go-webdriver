@@ -50,8 +50,17 @@ func NewSession(client Client, desired, required interface{}) (*Session, error) 
 		return nil, err
 	}
 	sessID := string(resp.SessionID)
+	// firefox
 	if len(sessID) == 0 {
-		return nil, ErrSessionIDEmpty
+		sess, ok := capabilities["sessionId"]
+		if !ok {
+			return nil, ErrSessionIDEmpty
+		}
+		sessID = sess.(string)
+		caps, ok := capabilities["capabilities"]
+		if ok {
+			capabilities = copyCap(caps.(map[string]interface{}))
+		}
 	}
 	return &Session{
 		id:     sessID,
