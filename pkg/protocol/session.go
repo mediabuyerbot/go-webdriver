@@ -8,7 +8,7 @@ import (
 
 const (
 	ImplicitTimeout Timeout = "implicit"
-	PageLoadTimeout Timeout = "page load"
+	PageLoadTimeout Timeout = "pageLoad"
 	ScriptTimeout   Timeout = "script"
 
 	DefaultTimeoutMs = Ms(10000)
@@ -94,10 +94,9 @@ func (s *Session) GetTimeouts(ctx context.Context) (info TimeoutInfo, err error)
 
 // SetTimeouts configure the amount of time that a particular type of operation can execute for before
 // they are aborted and a |Timeout| error is returned to the client.  Valid values are: "script" for script timeouts,
-// "implicit" for modifying the implicit wait timeout and "page load" for setting a page load timeout.
-// https://www.w3.org/TR/webdriver1/#set-timeouts
+// "implicit" for modifying the implicit wait timeout and "pageLoad" for setting a page load timeout.
 func (s *Session) SetTimeouts(ctx context.Context, t Timeout, ms Ms) error {
-	params := params{"type": t, "ms": ms}
+	params := params{string(t): ms}
 	if _, err := s.client.Post(ctx, "/session/"+s.id+"/timeouts", params); err != nil {
 		return err
 	}

@@ -5,6 +5,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/mediabuyerbot/go-webdriver/pkg/protocol"
+
 	"github.com/mediabuyerbot/go-webdriver"
 )
 
@@ -39,28 +43,23 @@ func newFirefoxBrowser(t *testing.T) (*webdriver.Session, func()) {
 }
 
 func TestSessionFirefoxdriverSessionCapabilities(t *testing.T) {
-	//b, c := newFirefoxBrowser(t)
-	//defer c()
-	//
-	//ctx := context.Background()
-	//
-	//log.Println(b.SessionID())
-	//
-	//// timeouts
-	//b.Session().SetTimeouts(ctx, protocol.ImplicitTimeout, protocol.DefaultTimeoutMs)
-	//b.Session().SetTimeouts(ctx, protocol.PageLoadTimeout, protocol.DefaultTimeoutMs)
-	//b.Session().SetTimeouts(ctx, protocol.ScriptTimeout, protocol.DefaultTimeoutMs)
-	//
-	//time.Sleep(2 * time.Second)
-	//timeoutInfo, err := b.Session().GetTimeouts(ctx)
-	//log.Println(timeoutInfo, err)
-	//
-	////assert.Nil(t, err)
-	////assert.Equal(t, timeoutInfo.Implicit, protocol.DefaultTimeoutMs, "timeoutInfo.Implicit")
-	////assert.Equal(t, timeoutInfo.PageLoad, protocol.DefaultTimeoutMs, "timeoutInfo.PageLoad")
-	////assert.Equal(t, timeoutInfo.Script, protocol.DefaultTimeoutMs, "timeoutInfo.Script")
-	////
-	////// session id
-	////assert.NotEmpty(t, b.Session().ID())
+	b, c := newFirefoxBrowser(t)
+	defer c()
+
+	ctx := context.Background()
+
+	// timeouts
+	b.Session().SetTimeouts(ctx, protocol.ImplicitTimeout, protocol.DefaultTimeoutMs)
+	b.Session().SetTimeouts(ctx, protocol.PageLoadTimeout, protocol.DefaultTimeoutMs)
+	b.Session().SetTimeouts(ctx, protocol.ScriptTimeout, protocol.DefaultTimeoutMs)
+
+	timeoutInfo, err := b.Session().GetTimeouts(ctx)
+	assert.Nil(t, err)
+	assert.Equal(t, timeoutInfo.Implicit, protocol.DefaultTimeoutMs, "timeoutInfo.Implicit")
+	assert.Equal(t, timeoutInfo.PageLoad, protocol.DefaultTimeoutMs, "timeoutInfo.PageLoad")
+	assert.Equal(t, timeoutInfo.Script, protocol.DefaultTimeoutMs, "timeoutInfo.Script")
+
+	// session id
+	assert.NotEmpty(t, b.SessionID())
 
 }
