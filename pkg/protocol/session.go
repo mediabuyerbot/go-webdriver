@@ -8,8 +8,10 @@ import (
 
 const (
 	ImplicitTimeout Timeout = "implicit"
-	PageLoadTimeout Timeout = "pageLoad"
+	PageLoadTimeout Timeout = "page load"
 	ScriptTimeout   Timeout = "script"
+
+	DefaultTimeoutMs = Ms(10000)
 )
 
 var (
@@ -33,7 +35,7 @@ type (
 // The New Session command creates a new WebDriver session with the endpoint node. If the creation fails,
 // a session not created error is returned.
 // https://www.w3.org/TR/webdriver1/#new-session
-func NewSession(client Client, desired, required Capabilities) (*Session, error) {
+func NewSession(client Client, desired, required interface{}) (*Session, error) {
 	if desired == nil {
 		desired = map[string]interface{}{}
 	}
@@ -159,21 +161,10 @@ func (s *Session) Status(ctx context.Context) (st Status, err error) {
 	return st, nil
 }
 
-type Status struct {
-	Build struct {
-		Version  string `json:"version"`
-		Revision string `json:"revision"`
-		Time     string `json:"time"`
-	}
-	OS struct {
-		Arch    string `json:"arch"`
-		Name    string `json:"name"`
-		Version string `json:"version"`
-	}
-}
+type Status map[string]interface{}
 
 type TimeoutInfo struct {
-	Implicit Timeout `json:"implicit"`
-	PageLoad Timeout `json:"pageLoad"`
-	Script   Timeout `json:"script"`
+	Implicit Ms `json:"implicit"`
+	PageLoad Ms `json:"pageLoad"`
+	Script   Ms `json:"script"`
 }

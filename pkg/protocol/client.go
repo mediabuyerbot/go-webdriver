@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -46,7 +45,7 @@ func (c *httpClient) handleResponse(r *http.Response) (resp *Response, err error
 	resp = &Response{}
 	err = json.Unmarshal(buf, resp)
 	if err != nil && r.StatusCode == 200 {
-		return nil, errors.New("error: response must be a JSON object")
+		return nil, err
 	}
 	if r.StatusCode >= 400 || resp.Status != 0 {
 		return nil, parseError(r.StatusCode, *resp)
@@ -118,9 +117,9 @@ func (e CommandError) Error() string {
 }
 
 type Response struct {
-	SessionID []byte `json:"sessionId"`
-	Status    int    `json:"status"`
-	Value     []byte `json:"value"`
+	SessionID json.RawMessage `json:"sessionId"`
+	Status    int             `json:"status"`
+	Value     json.RawMessage `json:"value"`
 }
 
 func parseError(code int, resp Response) error {

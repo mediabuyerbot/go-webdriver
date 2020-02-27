@@ -69,8 +69,3 @@ var statusCode = map[int]string{
 }
 
 type Capabilities map[string]interface{}
-
-var (
-	DefaultDesiredLinuxCapabilities  = Capabilities{}
-	DefaultRequiredLinuxCapabilities = Capabilities{}
-)

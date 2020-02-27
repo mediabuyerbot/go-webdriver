@@ -1,7 +1,6 @@
-.PHONY: dep test test-int
+.PHONY: dep test int-test unit-test
 
 dep: # install dependencies
-	go mod tidy
 	go mod download
 	go mod vendor
 
@@ -12,5 +11,4 @@ unit-test: dep # run unit tests
 int-test: dep #  run integration tests
 	docker-compose -f ./test/docker-compose.yml up --build --abort-on-container-exit
 	docker-compose -f ./test/docker-compose.yml down --volumes
-
 

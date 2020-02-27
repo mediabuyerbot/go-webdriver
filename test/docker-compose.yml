@@ -1,11 +1,7 @@
 version: '3.4'
 
-x-common-env: &env
-  WEBGO_CHROMEDRIVER_ADDR: 9594
-  WEBGO_FIREFOXDRIVER_ADDR: 9595
-
 networks:
-  go-webdriver-net:
+  go-web-network:
     driver: bridge
 
 services:
@@ -13,22 +9,22 @@ services:
     image: robcherry/docker-chromedriver:latest
     environment:
       CHROMEDRIVER_WHITELISTED_IPS: ''
-    ports:
-      - 9594:4444
     networks:
-      - go-webdriver-net
+      - go-web-network
 
   firefoxdriver:
     image: wakaba/docker-firefoxdriver:stable
-    ports:
-      - 9595:9516
     networks:
-      - go-webdriver-net
+       - go-web-network
 
   go-webdriver:
     environment:
-        *env
+       WEBGO_CHROMEDRIVER_ADDR: 'http://chromedriver:4444'
+       WEBGO_FIREFOXDRIVER_ADDR: 'http://firefoxdriver:9516'
     depends_on:
+       - chromedriver
+       - firefoxdriver
+    links:
       - chromedriver
       - firefoxdriver
     build:
@@ -36,4 +32,4 @@ services:
     volumes:
       - $PWD:/go/src/github.com/mediabuyerbot/go-webdriver
     networks:
-      - go-webdriver-net
+      - go-web-network

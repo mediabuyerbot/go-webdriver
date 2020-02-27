@@ -4,13 +4,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/mediabuyerbot/go-webdriver/internal/protocol"
 	"github.com/mediabuyerbot/go-webdriver/pkg/httpclient"
+	"github.com/mediabuyerbot/go-webdriver/pkg/protocol"
 )
 
 const (
 	DefaultRetryCount = 3
 	DefaultTimeout    = 15 * time.Second
+)
+
+type (
+	DesiredCapabilities  map[string]interface{}
+	RequiredCapabilities map[string]interface{}
 )
 
 type Session struct {
@@ -19,9 +24,9 @@ type Session struct {
 	commandCtx *protocol.CommandContext
 }
 
-func NewSessionFromClient(client httpclient.Client, desired, required protocol.Capabilities) (*Session, error) {
+func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r RequiredCapabilities) (*Session, error) {
 	cli := protocol.NewClient(client)
-	sess, err := protocol.NewSession(cli, desired, required)
+	sess, err := protocol.NewSession(cli, d, r)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +39,7 @@ func NewSessionFromClient(client httpclient.Client, desired, required protocol.C
 	return &browser, nil
 }
 
-func NewSession(addr string, desired, required protocol.Capabilities) (*Session, error) {
+func NewSession(addr string, d DesiredCapabilities, r RequiredCapabilities) (*Session, error) {
 	client, err := httpclient.NewClient(addr,
 		httpclient.WithRetryCount(DefaultRetryCount),
 		httpclient.WithTimeout(DefaultTimeout),
@@ -42,7 +47,7 @@ func NewSession(addr string, desired, required protocol.Capabilities) (*Session,
 	if err != nil {
 		return nil, err
 	}
-	return NewSessionFromClient(client, desired, required)
+	return NewSessionFromClient(client, d, r)
 }
 
 func (b *Session) Session() *protocol.Session {
