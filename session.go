@@ -19,7 +19,7 @@ type (
 )
 
 type Session struct {
-	session    *protocol.Session
+	session    protocol.Session
 	navigation *protocol.Navigation
 	commandCtx *protocol.CommandContext
 }
@@ -32,9 +32,9 @@ func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r Req
 	}
 
 	browser := Session{
-		session:    sess,
-		navigation: protocol.NewNavigation(cli, sess.ID()),
-		commandCtx: protocol.NewCommandContext(cli, sess.ID()),
+		session: sess,
+		// navigation: protocol.NewNavigation(cli, sess.ID()),
+		// commandCtx: protocol.NewCommandContext(cli, sess.ID()),
 	}
 	return &browser, nil
 }
@@ -50,11 +50,11 @@ func NewSession(addr string, d DesiredCapabilities, r RequiredCapabilities) (*Se
 	return NewSessionFromClient(client, d, r)
 }
 
-func (b *Session) SessionID() string {
+func (b *Session) SessionID() protocol.SessionID {
 	return b.session.ID()
 }
 
-func (b *Session) Session() *protocol.Session {
+func (b *Session) Session() protocol.Session {
 	return b.session
 }
 
