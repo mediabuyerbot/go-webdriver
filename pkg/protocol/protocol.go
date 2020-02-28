@@ -78,6 +78,14 @@ var statusCode = map[int]string{
 
 type Capabilities map[string]interface{}
 
+func (c Capabilities) BrowserName() string {
+	v, ok := c[CapabilityBrowserName]
+	if ok {
+		return v.(string)
+	}
+	return ""
+}
+
 func copyCap(m map[string]interface{}) Capabilities {
 	cp := make(Capabilities)
 	for k, v := range m {

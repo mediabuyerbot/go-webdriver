@@ -99,7 +99,7 @@ func NewSession(client Client, desired, required interface{}) (Session, error) {
 	if err := json.Unmarshal(resp.Value, &capabilities); err != nil {
 		return nil, err
 	}
-	sessID := string(resp.SessionID)
+	sessID := resp.SessionID
 	// firefox
 	if len(sessID) == 0 {
 		sess, ok := capabilities["sessionId"]
@@ -107,6 +107,9 @@ func NewSession(client Client, desired, required interface{}) (Session, error) {
 			return nil, ErrUnknownSession
 		}
 		sessID = sess.(string)
+		if len(sessID) == 0 {
+			return nil, ErrUnknownSession
+		}
 		caps, ok := capabilities["capabilities"]
 		if ok {
 			capabilities = copyCap(caps.(map[string]interface{}))
