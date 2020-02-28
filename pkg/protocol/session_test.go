@@ -11,7 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
-func TestNewSessionWithoutW3CCompatibility(t *testing.T) {
+func TestNewSession_WithoutW3CCompatibility(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -34,7 +34,7 @@ func TestNewSessionWithoutW3CCompatibility(t *testing.T) {
 	assert.Equal(t, sess.Capabilities().BrowserName(), "chrome")
 }
 
-func TestNewSessionWitW3CCompatibility(t *testing.T) {
+func TestNewSession_WitW3CCompatibility(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -57,7 +57,7 @@ func TestNewSessionWitW3CCompatibility(t *testing.T) {
 	assert.Equal(t, sess.Capabilities().BrowserName(), "chrome")
 }
 
-func TestNewSessionErrorWitW3CCompatibility(t *testing.T) {
+func TestNewSession_ErrorWitW3CCompatibility(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -77,7 +77,7 @@ func TestNewSessionErrorWitW3CCompatibility(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestNewSessionErrorWitW3CCompatibility2(t *testing.T) {
+func TestNewSession_ErrorWitW3CCompatibility2(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -97,7 +97,7 @@ func TestNewSessionErrorWitW3CCompatibility2(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestNewSessionWithError(t *testing.T) {
+func TestNewSession_WithError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -119,7 +119,7 @@ func TestNewSessionWithError(t *testing.T) {
 	assert.Equal(t, cmdErr.Code, errCode)
 }
 
-func TestNewSessionWithInvalidResponse(t *testing.T) {
+func TestNewSession_WithInvalidResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -135,4 +135,59 @@ func TestNewSessionWithInvalidResponse(t *testing.T) {
 	sess, err := NewSession(cli, nil, nil)
 	assert.Nil(t, sess)
 	assert.Error(t, err)
+}
+
+func TestSession_Capabilities(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cli := NewMockClient(ctrl)
+	cli.EXPECT().Post(context.Background(), "/session", gomock.Any()).
+		Times(1).
+		Return(&Response{
+			SessionID: "",
+			Status:    0,
+			Value:     json.RawMessage(`{"sessionId":"123", "capabilities": {"browserName": "chrome"}}`),
+		}, nil)
+
+	desired := make(map[string]string)
+	desired["platform"] = "linux"
+	required := make(map[string]string)
+	sess, err := NewSession(cli, desired, required)
+	assert.Nil(t, err)
+	assert.Equal(t, sess.Capabilities().BrowserName(), "chrome")
+	assert.Equal(t, sess.ID(), SessionID("123"))
+}
+
+func TestSession_DeleteSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cli := NewMockClient(ctrl)
+	ctx := context.Background()
+
+	cli.EXPECT().Delete(ctx, "/session/123").Times(1).Return(&Response{
+		SessionID: "",
+		Status:    0,
+		Value:     json.RawMessage(`{"sessionId":"123", "status":0, "value":null}`),
+	}, nil)
+
+	cli.EXPECT().Post(ctx, "/session", gomock.Any()).
+		Times(1).
+		Return(&Response{
+			SessionID: "",
+			Status:    0,
+			Value:     json.RawMessage(`{"sessionId":"123", "capabilities": {"browserName": "chrome"}}`),
+		}, nil).Do(func(_ context.Context, p string, a map[string]interface{}) {
+		assert.Equal(t, p, "/session")
+		assert.Equal(t, a["desiredCapabilities"].(map[string]string)["platform"], "linux")
+	})
+
+	desired := make(map[string]string)
+	desired["platform"] = "linux"
+	required := make(map[string]string)
+	sess, err := NewSession(cli, desired, required)
+	assert.Nil(t, err)
+	err = sess.Delete(ctx)
+	assert.Nil(t, err)
 }
