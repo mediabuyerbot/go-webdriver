@@ -1,4 +1,4 @@
-# Go-WebDriver :: [W3C-Specification](https://w3c.github.io/webdriver/)
+# go-webdriver  [![Coverage Status](https://coveralls.io/repos/github/mediabuyerbot/go-webdriver/badge.svg?branch=)](https://coveralls.io/github/mediabuyerbot/go-webdriver?branch=)
 
 ## Work in progress...
 
@@ -22,7 +22,7 @@ $ make int-test
 $ make mocks
 ```
 
-## WebDriver protocol implementation
+## [Protocol implementation](https://w3c.github.io/webdriver/)
 
 | Session specification                                                         | Chrome        | Firefox  |
 | -----------------------------------------------------------------------------  | :------------:| :-------:|
