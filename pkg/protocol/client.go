@@ -90,6 +90,10 @@ type Response struct {
 	Value     json.RawMessage `json:"value"`
 }
 
+func (r Response) Success() bool {
+	return string(r.Value) == "null"
+}
+
 func httpStatusCode(code int) (s string) {
 	switch code {
 	case 200, 400:

@@ -23,7 +23,8 @@ $ make mocks
 ```
 
 ## WebDriver protocol implementation
-| Session specification                                                          | Chrome        | Firefox  |
+
+| Session specification                                                         | Chrome        | Firefox  |
 | -----------------------------------------------------------------------------  | :------------:| :-------:|
 | [New Session](https://w3c.github.io/webdriver/#new-session)                    |  &#10003;     | &#10003; |
 | [Delete Session](https://w3c.github.io/webdriver/#delete-session)              |  &#10003;     | &#10003; |
@@ -42,4 +43,3 @@ $ make mocks
 | [Forward](https://w3c.github.io/webdriver/#forward)                            |  &#10003;     | &#10003; |
 | [Refresh](https://w3c.github.io/webdriver/#refresh)                            |  &#10003;     | &#10003; |
 | [Get Title](https://w3c.github.io/webdriver/#get-title)                        |  &#10003;     | &#10003; |
-

@@ -2,8 +2,11 @@ package protocol
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 )
+
+var ErrInvalidResponse = errors.New("protocol: invalid response")
 
 // Error represents a WebDriver protocol error.
 type Error struct {
