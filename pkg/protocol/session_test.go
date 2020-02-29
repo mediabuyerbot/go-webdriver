@@ -3,6 +3,7 @@ package protocol
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strconv"
 	"testing"
 
@@ -51,7 +52,7 @@ func TestNewSession_WithoutW3CCompatibility(t *testing.T) {
 	sess, err := NewSession(cli, desired, required)
 
 	assert.Nil(t, err)
-	assert.Equal(t, sess.ID(), SessionID("123"))
+	assert.Equal(t, sess.ID(), "123")
 	assert.Equal(t, sess.Capabilities().BrowserName(), "chrome")
 }
 
@@ -74,7 +75,7 @@ func TestNewSession_WitW3CCompatibility(t *testing.T) {
 	sess, err := NewSession(cli, desired, required)
 
 	assert.Nil(t, err)
-	assert.Equal(t, sess.ID(), SessionID("123"))
+	assert.Equal(t, sess.ID(), "123")
 	assert.Equal(t, sess.Capabilities().BrowserName(), "chrome")
 }
 
@@ -165,10 +166,10 @@ func TestSession_Capabilities(t *testing.T) {
 	cli := NewMockClient(ctrl)
 	sess := testNewSession(cli, t)
 	assert.Equal(t, sess.Capabilities().BrowserName(), "chrome")
-	assert.Equal(t, sess.ID(), SessionID("123"))
+	assert.Equal(t, sess.ID(), "123")
 }
 
-func TestSession_DeleteSuccess(t *testing.T) {
+func TestSession_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -184,22 +185,60 @@ func TestSession_DeleteSuccess(t *testing.T) {
 	sess := testNewSession(cli, t)
 	err := sess.Delete(ctx)
 	assert.Nil(t, err)
+
+	cli.EXPECT().Delete(context.TODO(), "/session/123").Times(1).Return(&Response{
+		SessionID: "",
+		Status:    0,
+		Value:     json.RawMessage(`{"sessionId":"123", "status":0, "value":null}`),
+	}, errors.New("some error"))
+	err = sess.Delete(ctx)
+	assert.Error(t, err)
+
+	cli.EXPECT().Delete(context.TODO(), "/session/123").Times(1).Return(&Response{
+		SessionID: "",
+		Status:    0,
+		Value:     json.RawMessage(`{"sessionId":"123, "status":0, "value":null}`),
+	}, errors.New("some error"))
+	err = sess.Delete(ctx)
+	assert.Error(t, err)
 }
 
-func TestSession_GetTimeouts(t *testing.T) {
+func TestSession_Status(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	cli := NewMockClient(ctrl)
-	sess := testNewSession(cli, t)
 	ctx := context.Background()
-	cli.EXPECT().Get(ctx, "/session/123/timeouts").Times(1).Return(&Response{
-		Value: []byte(`{"script": 10000, "pageLoad": 10000, "implicit": 10000}`),
-	}, nil)
 
-	ti, err := sess.GetTimeouts(ctx)
+	// chrome
+	cli.EXPECT().Get(ctx, "/status").Times(1).Return(&Response{
+		Value: []byte(`{"build":{"version":"79.0.3945.36 (3582db32b33893869b8c1339e8f4d9ed1816f143-refs/branch-heads/3945@{#614})"},"message":"ChromeDriver ready for new sessions.","os":{"arch":"x86_64","name":"Mac OS X","version":"1"},"ready":true}`)}, nil)
+
+	sess := testNewSession(cli, t)
+
+	st, err := sess.Status(ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, ti.Implicit, DefaultTimeoutMs)
-	assert.Equal(t, ti.Script, DefaultTimeoutMs)
-	assert.Equal(t, ti.PageLoad, DefaultTimeoutMs)
+	assert.True(t, st.HasExtensionInfo())
+	assert.Equal(t, st.Build.Version, "79.0.3945.36 (3582db32b33893869b8c1339e8f4d9ed1816f143-refs/branch-heads/3945@{#614})")
+	assert.True(t, st.Ready)
+
+	// firefox
+	cli.EXPECT().Get(ctx, "/status").Times(1).Return(&Response{
+		Value: []byte(`{"message":"","ready":true}`)}, nil)
+
+	st, err = sess.Status(ctx)
+	assert.Nil(t, err)
+	assert.False(t, st.HasExtensionInfo())
+	assert.True(t, st.Ready)
+
+	cli.EXPECT().Get(ctx, "/status").Times(1).Return(&Response{
+		Value: []byte(`{"message":"","ready":true}`)}, errors.New("some error"))
+	st, err = sess.Status(ctx)
+	assert.NotNil(t, err)
+
+	cli.EXPECT().Get(ctx, "/status").Times(1).Return(&Response{
+		Value: []byte(`{"message":","ready":true}`)}, nil)
+	st, err = sess.Status(ctx)
+	assert.NotNil(t, err)
+
 }

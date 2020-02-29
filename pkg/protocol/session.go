@@ -6,19 +6,6 @@ import (
 	"errors"
 )
 
-const (
-	// ImplicitTimeout  gives the timeout of when to abort locating an element.
-	ImplicitTimeout Timeout = "implicit"
-
-	// PageLoadTimeout provides the timeout limit used to interrupt navigation of the browsing context.
-	PageLoadTimeout Timeout = "pageLoad"
-
-	// ScriptTimeout determines when to interrupt a script that is being evaluated.
-	ScriptTimeout Timeout = "script"
-
-	DefaultTimeoutMs = Ms(10000)
-)
-
 // ErrUnknownSession returns when a new session is created with empty sessionId.
 var ErrUnknownSession = errors.New("protocol: unknown session")
 
@@ -26,18 +13,10 @@ var ErrUnknownSession = errors.New("protocol: unknown session")
 // Session is equivalent to a single instantiation of a particular user agent, including all its child browsers.
 type Session interface {
 	// ID returns the unique session id.
-	ID() SessionID
+	ID() string
 
 	// Capabilities returns the capabilities of the specified session.
 	Capabilities() Capabilities
-
-	// GetTimeouts returns the timeouts implicit, pageLoad, script.
-	GetTimeouts(context.Context) (TimeoutInfo, error)
-
-	// SetTimeouts configure the amount of time that a particular type of operation can execute for before
-	// they are aborted and a |Timeout| error is returned to the client.  Valid values are: "script" for script timeouts,
-	// "implicit" for modifying the implicit wait timeout and "pageLoad" for setting a page load timeout.
-	SetTimeouts(context.Context, Timeout, Ms) error
 
 	// Status returns information about whether a remote end is in a state
 	// in which it can create new sessions, but may additionally include arbitrary
@@ -46,15 +25,6 @@ type Session interface {
 
 	// Delete delete the session.
 	Delete(context.Context) error
-
-	// SetImplicitTimeout set the session implicit wait timeout.
-	SetImplicitTimeout(context.Context, Ms) error
-
-	// SetPageLoadTimeout set the session page load timeout.
-	SetPageLoadTimeout(context.Context, Ms) error
-
-	// SetScriptTimeout set the session script timeout.
-	SetScriptTimeout(context.Context, Ms) error
 }
 
 type (
@@ -63,19 +33,29 @@ type (
 		client Client
 		cap    Capabilities
 	}
-
-	Timeout   string
-	SessionID string
-	Ms        int
-
-	Status map[string]interface{}
-
-	TimeoutInfo struct {
-		Implicit Ms `json:"implicit"`
-		PageLoad Ms `json:"pageLoad"`
-		Script   Ms `json:"script"`
-	}
 )
+
+type Status struct {
+	// protocol specification
+	Ready   bool   `json:"ready"`
+	Message string `json:"message"`
+
+	// extension
+	Build struct {
+		Version  string `json:"version"`
+		Revision string `json:"revision"`
+		Time     string `json:"time"`
+	} `json:"build"`
+	OS struct {
+		Arch    string `json:"arch"`
+		Name    string `json:"name"`
+		Version string `json:"version"`
+	} `json:"os"`
+}
+
+func (s Status) HasExtensionInfo() bool {
+	return len(s.Build.Version) > 0
+}
 
 // NewSession creates a new instance of Session.
 // The new session command creates a new WebDriver session with the endpoint node. If the creation fails,
@@ -123,51 +103,13 @@ func NewSession(client Client, desired, required interface{}) (Session, error) {
 }
 
 // ID returns the unique session id.
-func (s *session) ID() SessionID {
-	return SessionID(s.id)
+func (s *session) ID() string {
+	return s.id
 }
 
 // Capabilities returns the capabilities of the specified session.
 func (s *session) Capabilities() Capabilities {
 	return s.cap
-}
-
-// GetTimeouts returns the timeouts implicit, pageLoad, script.
-func (s *session) GetTimeouts(ctx context.Context) (info TimeoutInfo, err error) {
-	resp, err := s.client.Get(ctx, "/session/"+s.id+"/timeouts")
-	if err != nil {
-		return info, err
-	}
-	if err := json.Unmarshal(resp.Value, &info); err != nil {
-		return info, err
-	}
-	return info, nil
-}
-
-// SetTimeouts configure the amount of time that a particular type of operation can execute for before
-// they are aborted and a |Timeout| error is returned to the client.  Valid values are: "script" for script timeouts,
-// "implicit" for modifying the implicit wait timeout and "pageLoad" for setting a page load timeout.
-func (s *session) SetTimeouts(ctx context.Context, t Timeout, ms Ms) error {
-	params := params{string(t): ms}
-	if _, err := s.client.Post(ctx, "/session/"+s.id+"/timeouts", params); err != nil {
-		return err
-	}
-	return nil
-}
-
-// SetImplicitTimeout set the session implicit wait timeout.
-func (s *session) SetImplicitTimeout(ctx context.Context, ms Ms) error {
-	return s.SetTimeouts(ctx, ImplicitTimeout, ms)
-}
-
-// SetPageLoadTimeout set the session page load timeout.
-func (s *session) SetPageLoadTimeout(ctx context.Context, ms Ms) error {
-	return s.SetTimeouts(ctx, PageLoadTimeout, ms)
-}
-
-// SetScriptTimeout set the session script timeout.
-func (s *session) SetScriptTimeout(ctx context.Context, ms Ms) error {
-	return s.SetTimeouts(ctx, ScriptTimeout, ms)
 }
 
 // Delete delete the session.
