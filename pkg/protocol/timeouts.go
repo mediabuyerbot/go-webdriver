@@ -19,7 +19,7 @@ const (
 	DefaultTimeoutMs = Ms(10000)
 )
 
-// ErrTimeoutConfiguration returns when an invalid timeout type is specified
+// ErrTimeoutConfiguration returns when an invalid timeout type is specified.
 var ErrTimeoutConfiguration = errors.New("protocol: timeouts configuration")
 
 // Timeouts represents  a timeouts that control
@@ -95,8 +95,7 @@ func (t *timeouts) SetTimeouts(ctx context.Context, tm Timeout, ms Ms) error {
 	if ok := t.validate(tm); !ok {
 		return ErrTimeoutConfiguration
 	}
-	params := params{string(tm): ms}
-	if _, err := t.client.Post(ctx, "/session/"+t.id+"/timeouts", params); err != nil {
+	if _, err := t.client.Post(ctx, "/session/"+t.id+"/timeouts", params{string(tm): ms}); err != nil {
 		return err
 	}
 	return nil

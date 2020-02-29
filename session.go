@@ -21,11 +21,14 @@ type Session interface {
 	// SessionID returns the unique session id.
 	SessionID() string
 
-	// Session returns an implemented session protocol.
+	// Session returns the implementation of the session protocol
 	Session() protocol.Session
 
-	// Timeouts returns an implemented timeouts protocol.
+	// Timeouts returns the implementation of the timeouts protocol
 	Timeouts() protocol.Timeouts
+
+	// Navigation returns the implementation of the navigation protocol
+	Navigation() protocol.Navigation
 
 	// Close close the current session.
 	Close(ctx context.Context) error
@@ -39,7 +42,7 @@ type (
 type session struct {
 	session    protocol.Session
 	timeouts   protocol.Timeouts
-	navigation *protocol.Navigation
+	navigation protocol.Navigation
 	commandCtx *protocol.CommandContext
 }
 
@@ -51,9 +54,9 @@ func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r Req
 	}
 
 	browser := session{
-		session:  sess,
-		timeouts: protocol.NewTimeouts(cli, sess.ID()),
-		// navigation: protocol.NewNavigation(cli, sess.ID()),
+		session:    sess,
+		timeouts:   protocol.NewTimeouts(cli, sess.ID()),
+		navigation: protocol.NewNavigation(cli, sess.ID()),
 		// commandCtx: protocol.NewCommandContext(cli, sess.ID()),
 	}
 	return &browser, nil
@@ -85,9 +88,10 @@ func (b *session) Timeouts() protocol.Timeouts {
 	return b.timeouts
 }
 
-//func (b *Session) Navigation() *protocol.Navigation {
-//	return b.navigation
-//}
+func (b *session) Navigation() protocol.Navigation {
+	return b.navigation
+}
+
 //
 //func (b *Session) CommandContext() *protocol.CommandContext {
 //	return b.commandCtx
