@@ -11,6 +11,27 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+func testNewSession(cli Client, t *testing.T) Session {
+	mockCli, ok := cli.(*MockClient)
+	assert.True(t, ok)
+	mockCli.EXPECT().Post(context.TODO(), "/session", gomock.Any()).
+		Times(1).
+		Return(&Response{
+			SessionID: "",
+			Status:    0,
+			Value:     json.RawMessage(`{"sessionId":"123", "capabilities": {"browserName": "chrome"}}`),
+		}, nil).Do(func(_ context.Context, p string, a map[string]interface{}) {
+		assert.Equal(t, p, "/session")
+		assert.Equal(t, a["desiredCapabilities"].(map[string]string)["platform"], "linux")
+	})
+	desired := make(map[string]string)
+	desired["platform"] = "linux"
+	required := make(map[string]string)
+	sess, err := NewSession(cli, desired, required)
+	assert.Nil(t, err)
+	return sess
+}
+
 func TestNewSession_WithoutW3CCompatibility(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -142,19 +163,7 @@ func TestSession_Capabilities(t *testing.T) {
 	defer ctrl.Finish()
 
 	cli := NewMockClient(ctrl)
-	cli.EXPECT().Post(context.Background(), "/session", gomock.Any()).
-		Times(1).
-		Return(&Response{
-			SessionID: "",
-			Status:    0,
-			Value:     json.RawMessage(`{"sessionId":"123", "capabilities": {"browserName": "chrome"}}`),
-		}, nil)
-
-	desired := make(map[string]string)
-	desired["platform"] = "linux"
-	required := make(map[string]string)
-	sess, err := NewSession(cli, desired, required)
-	assert.Nil(t, err)
+	sess := testNewSession(cli, t)
 	assert.Equal(t, sess.Capabilities().BrowserName(), "chrome")
 	assert.Equal(t, sess.ID(), SessionID("123"))
 }
@@ -166,28 +175,13 @@ func TestSession_DeleteSuccess(t *testing.T) {
 	cli := NewMockClient(ctrl)
 	ctx := context.Background()
 
-	cli.EXPECT().Delete(ctx, "/session/123").Times(1).Return(&Response{
+	cli.EXPECT().Delete(context.TODO(), "/session/123").Times(1).Return(&Response{
 		SessionID: "",
 		Status:    0,
 		Value:     json.RawMessage(`{"sessionId":"123", "status":0, "value":null}`),
 	}, nil)
 
-	cli.EXPECT().Post(ctx, "/session", gomock.Any()).
-		Times(1).
-		Return(&Response{
-			SessionID: "",
-			Status:    0,
-			Value:     json.RawMessage(`{"sessionId":"123", "capabilities": {"browserName": "chrome"}}`),
-		}, nil).Do(func(_ context.Context, p string, a map[string]interface{}) {
-		assert.Equal(t, p, "/session")
-		assert.Equal(t, a["desiredCapabilities"].(map[string]string)["platform"], "linux")
-	})
-
-	desired := make(map[string]string)
-	desired["platform"] = "linux"
-	required := make(map[string]string)
-	sess, err := NewSession(cli, desired, required)
-	assert.Nil(t, err)
-	err = sess.Delete(ctx)
+	sess := testNewSession(cli, t)
+	err := sess.Delete(ctx)
 	assert.Nil(t, err)
 }

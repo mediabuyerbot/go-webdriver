@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/mediabuyerbot/go-webdriver/pkg/httpclient"
@@ -84,54 +82,10 @@ func (c *httpClient) Post(ctx context.Context, path string, params interface{}) 
 	return c.handleResponse(httpResp)
 }
 
-type StackFrame struct {
-	FileName   string
-	ClassName  string
-	MethodName string
-	LineNumber int
-}
-
-type Error struct {
-	Code       string      `json:"error"`
-	Message    string      `json:"message"`
-	StackTrace string      `json:"stacktrace"`
-	Data       interface{} `json:"data"`
-}
-
-func (e Error) Error() string {
-	return fmt.Sprintf("%s %s", e.Message, e.Code)
-}
-
 type Response struct {
 	SessionID string          `json:"sessionId"`
 	Status    int             `json:"status"`
 	Value     json.RawMessage `json:"value"`
-}
-
-func parseError(respStatusCode int, resp *Response) error {
-	var (
-		sc  = httpStatusCode(respStatusCode)
-		msg string
-	)
-	// if status exists
-	if resp.Status > 0 {
-		sm, ok := statusCode[resp.Status]
-		if ok {
-			sc = strconv.Itoa(resp.Status)
-			msg = sm
-		}
-	}
-	cmdErr := &Error{
-		Code:    sc,
-		Message: msg,
-	}
-	if err := json.Unmarshal(resp.Value, cmdErr); err != nil {
-		cmdErr.Message = string(resp.Value)
-	}
-	if len(cmdErr.Message) == 0 {
-		cmdErr.Message = cmdErr.Code
-	}
-	return cmdErr
 }
 
 func httpStatusCode(code int) (s string) {

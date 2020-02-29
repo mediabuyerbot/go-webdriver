@@ -86,6 +86,14 @@ func (c Capabilities) BrowserName() string {
 	return ""
 }
 
+func StatusText(sc int) string {
+	msg, ok := statusCode[sc]
+	if !ok {
+		return "Unknown error"
+	}
+	return msg
+}
+
 func copyCap(m map[string]interface{}) Capabilities {
 	cp := make(Capabilities)
 	for k, v := range m {

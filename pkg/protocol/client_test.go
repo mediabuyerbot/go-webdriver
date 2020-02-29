@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -71,7 +70,7 @@ func TestHttpClient_PostWithoutParam(t *testing.T) {
 		err = json.Unmarshal(body, &p)
 		assert.NoError(t, err)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"sessionId":"1234", "value": {}, "status": 0}`))
+		w.Write([]byte(`{"sessionId":"1234", "value": null}`))
 	}
 
 	srv := httptest.NewServer(http.HandlerFunc(handler))
@@ -117,78 +116,7 @@ func TestHttpClient_HandleErrorWithoutStatusCode(t *testing.T) {
 	assert.Equal(t, cmdErr.Code, "unexpected alert open")
 	assert.Equal(t, cmdErr.Message, "error")
 	assert.Equal(t, cmdErr.StackTrace, "stacktrace")
-	assert.Equal(t, cmdErr.Data.(map[string]interface{})["text"], "Message from window.alert")
-}
-
-func TestHttpClient_HandleErrorWithStatusCodeAnd200HTTP(t *testing.T) {
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":33, "value": {"message": "error"}}`))
-	}
-
-	srv := httptest.NewServer(http.HandlerFunc(handler))
-	defer srv.Close()
-
-	httpCli, err := httpclient.NewClient(srv.URL)
-	assert.Nil(t, err)
-
-	cli := NewClient(httpCli)
-	resp, err := cli.Post(context.TODO(), "/", nil)
-	assert.Nil(t, resp)
-	assert.Error(t, err)
-
-	cmdErr, ok := err.(*Error)
-	assert.True(t, ok)
-
-	assert.Equal(t, cmdErr.Code, strconv.Itoa(SessionNotCreatedExceptionStatusCode))
-	assert.Equal(t, cmdErr.Message, "error")
-}
-
-func TestHttpClient_HandleErrorWithOnlyStatusAnd200HTTP(t *testing.T) {
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":33, "value": {}}`))
-	}
-
-	srv := httptest.NewServer(http.HandlerFunc(handler))
-	defer srv.Close()
-
-	httpCli, err := httpclient.NewClient(srv.URL)
-	assert.Nil(t, err)
-
-	cli := NewClient(httpCli)
-	resp, err := cli.Post(context.TODO(), "/", nil)
-	assert.Nil(t, resp)
-	assert.Error(t, err)
-
-	cmdErr, ok := err.(*Error)
-	assert.True(t, ok)
-
-	assert.Equal(t, cmdErr.Code, strconv.Itoa(SessionNotCreatedExceptionStatusCode))
-	assert.Equal(t, cmdErr.Message, statusCode[SessionNotCreatedExceptionStatusCode])
-}
-
-func TestHttpClient_HandleErrorWithOnly500HTTP(t *testing.T) {
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{}`))
-	}
-
-	srv := httptest.NewServer(http.HandlerFunc(handler))
-	defer srv.Close()
-
-	httpCli, err := httpclient.NewClient(srv.URL)
-	assert.Nil(t, err)
-
-	cli := NewClient(httpCli)
-	resp, err := cli.Post(context.TODO(), "/", nil)
-	assert.Nil(t, resp)
-	assert.Error(t, err)
-
-	cmdErr, ok := err.(*Error)
-	assert.True(t, ok)
-	assert.Equal(t, cmdErr.Code, StatusFailedCommand)
-	assert.Equal(t, cmdErr.Message, StatusFailedCommand)
+	assert.Equal(t, cmdErr.Data["text"], "Message from window.alert")
 }
 
 func TestHttpClient_HandleErrorBadResponse(t *testing.T) {
