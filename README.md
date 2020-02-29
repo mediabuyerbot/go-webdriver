@@ -1,4 +1,4 @@
-# go-webdriver  [![Coverage Status](https://coveralls.io/repos/github/mediabuyerbot/go-webdriver/badge.svg?branch=)](https://coveralls.io/github/mediabuyerbot/go-webdriver?branch=master)
+# go-webdriver  [![Coverage Status](https://coveralls.io/repos/github/mediabuyerbot/go-webdriver/badge.svg?branch=master)](https://coveralls.io/github/mediabuyerbot/go-webdriver?branch=master)
 
 ## Work in progress...
 
