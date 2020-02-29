@@ -1,6 +1,13 @@
 # Go-WebDriver :: [W3C-Specification](https://w3c.github.io/webdriver/)
-### Work in progress...
 
+## Work in progress...
+
+#### Installation
+```ssh
+go get github.com/mediabuyerbot/go-webdriver
+```
+
+#### Commands
 ```ssh
 # Get golang dependencies 
 $ make dep  
@@ -15,7 +22,7 @@ $ make int-test
 $ make mocks
 ```
 
-### WebDriver protocol implementation
+## WebDriver protocol implementation
 |                                                                                | Chrome        | Firefox  |
 | -----------------------------------------------------------------------------  | :------------:| :-------:|
 | [New Session](https://w3c.github.io/webdriver/#new-session)                    |  &#10003;     | &#10003; |
