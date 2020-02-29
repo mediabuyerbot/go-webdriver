@@ -15,16 +15,12 @@ $ make int-test
 $ make mocks
 ```
 
-## Protocol implementation
-
-| [**Session specification**](https://w3c.github.io/webdriver/#sessions)         | Chrome        | Firefox  |
+### WebDriver protocol implementation
+|                                                                                | Chrome        | Firefox  |
 | -----------------------------------------------------------------------------  | :------------:| :-------:|
 | [New Session](https://w3c.github.io/webdriver/#new-session)                    |  &#10003;     | &#10003; |
 | [Delete Session](https://w3c.github.io/webdriver/#delete-session)              |  &#10003;     | &#10003; |
 | [Status](https://w3c.github.io/webdriver/#status)                              |  &#10003;     | &#10003; |
-| | | |
-| [**Timeouts specification**](https://w3c.github.io/webdriver/#timeouts)        | | |
 | [Get Timeouts](https://w3c.github.io/webdriver/#get-timeouts)                  |  &#10003;     | &#10003; |
 | [Set Timeouts](https://w3c.github.io/webdriver/#set-timeouts)                  |  &#10003;     | &#10003; |
-| | | |
 
