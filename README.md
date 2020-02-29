@@ -2,12 +2,12 @@
 
 ## Work in progress...
 
-#### Installation
+### Installation
 ```ssh
 go get github.com/mediabuyerbot/go-webdriver
 ```
 
-#### Commands
+### Commands
 ```ssh
 # Get golang dependencies 
 $ make dep  
