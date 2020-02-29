@@ -12,10 +12,10 @@ import (
 	"github.com/mediabuyerbot/go-webdriver"
 )
 
-func newChromeBrowser(t *testing.T) (*webdriver.Session, func()) {
+func newChromeBrowser(t *testing.T) (webdriver.Session, func()) {
 	addr := os.Getenv("WEBGO_CHROMEDRIVER_ADDR")
 	if len(addr) == 0 {
-		t.Fatal("WEBGO_CHROMEDRIVER_ADDR env is not assigned")
+		t.Skip()
 	}
 	browser, err := webdriver.NewSession(
 		addr,

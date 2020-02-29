@@ -5,17 +5,17 @@ import (
 	"os"
 	"testing"
 
+	"github.com/mediabuyerbot/go-webdriver"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/mediabuyerbot/go-webdriver/pkg/protocol"
-
-	"github.com/mediabuyerbot/go-webdriver"
 )
 
-func newFirefoxBrowser(t *testing.T) (*webdriver.Session, func()) {
+func newFirefoxBrowser(t *testing.T) (webdriver.Session, func()) {
 	addr := os.Getenv("WEBGO_FIREFOXDRIVER_ADDR")
 	if len(addr) == 0 {
-		t.Fatal("WEBGO_FIREFOXDRIVER_ADDR env is not assigned")
+		t.Skip()
 	}
 	browser, err := webdriver.NewSession(
 		addr,

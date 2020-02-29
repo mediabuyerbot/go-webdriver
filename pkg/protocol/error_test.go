@@ -22,10 +22,10 @@ func TestError_ParseError(t *testing.T) {
 				Value:     []byte(`{"error":"error code", "message": "error message"}`),
 			},
 			e: &Error{
-				Code:       "error code",
-				Message:    "error message",
-				StackTrace: "",
-				Data:       nil,
+				Code:          "error code",
+				Message:       "error message",
+				RawStacktrace: "",
+				Data:          nil,
 			},
 			httpStatusCode: 200,
 		},
@@ -38,9 +38,9 @@ func TestError_ParseError(t *testing.T) {
 				Value:     []byte(`{"message":"error message", "data": {"x":"1"}}`),
 			},
 			e: &Error{
-				Code:       httpStatusCode(200),
-				Message:    "error message",
-				StackTrace: "",
+				Code:          httpStatusCode(200),
+				Message:       "error message",
+				RawStacktrace: "",
 				Data: map[string]interface{}{
 					"x": "1",
 				},
@@ -56,9 +56,9 @@ func TestError_ParseError(t *testing.T) {
 				Value:     []byte(`{"error":"error", "data": {"x":"1"}}`),
 			},
 			e: &Error{
-				Code:       "error",
-				Message:    StatusText(XPathLookupErrorStatusCode),
-				StackTrace: "",
+				Code:          "error",
+				Message:       StatusText(XPathLookupErrorStatusCode),
+				RawStacktrace: "",
 				Data: map[string]interface{}{
 					"x": "1",
 				},
@@ -73,9 +73,9 @@ func TestError_ParseError(t *testing.T) {
 				Value:     []byte(`{}`),
 			},
 			e: &Error{
-				Code:       httpStatusCode(400),
-				StackTrace: "",
-				Data:       nil,
+				Code:          httpStatusCode(400),
+				RawStacktrace: "",
+				Data:          nil,
 			},
 			httpStatusCode: 200,
 		},
@@ -88,9 +88,9 @@ func TestError_ParseError(t *testing.T) {
 				Value:     []byte(`{"error":"error", "message":"error", "data": {"x":"1"}}`),
 			},
 			e: &Error{
-				Code:       "error",
-				Message:    "error",
-				StackTrace: "",
+				Code:          "error",
+				Message:       "error",
+				RawStacktrace: "",
 				Data: map[string]interface{}{
 					"x": "1",
 				},
@@ -106,10 +106,10 @@ func TestError_ParseError(t *testing.T) {
 				Value:     []byte(`null`),
 			},
 			e: &Error{
-				Code:       httpStatusCode(400),
-				Message:    httpStatusCode(400),
-				StackTrace: "",
-				Data:       nil,
+				Code:          httpStatusCode(400),
+				Message:       httpStatusCode(400),
+				RawStacktrace: "",
+				Data:          nil,
 			},
 			httpStatusCode: 400,
 		},
@@ -122,10 +122,10 @@ func TestError_ParseError(t *testing.T) {
 				Value:     []byte(`error msg`),
 			},
 			e: &Error{
-				Code:       httpStatusCode(400),
-				Message:    "error msg",
-				StackTrace: "",
-				Data:       nil,
+				Code:          httpStatusCode(400),
+				Message:       "error msg",
+				RawStacktrace: "",
+				Data:          nil,
 			},
 			httpStatusCode: 400,
 		},
@@ -138,10 +138,10 @@ func TestError_ParseError(t *testing.T) {
 				Value:     []byte(`null`),
 			},
 			e: &Error{
-				Code:       httpStatusCode(200),
-				Message:    StatusText(TimeoutStatusCode),
-				StackTrace: "",
-				Data:       nil,
+				Code:          httpStatusCode(200),
+				Message:       StatusText(TimeoutStatusCode),
+				RawStacktrace: "",
+				Data:          nil,
 			},
 			httpStatusCode: 200,
 		},
@@ -157,6 +157,7 @@ func TestError_ParseError(t *testing.T) {
 			assert.Equal(t, cmdErr.Code, c.e.Code, "error code")
 			assert.Equal(t, cmdErr.Message, c.e.Message, "error message")
 			assert.Equal(t, cmdErr.Data["x"], c.e.Data["x"])
+			assert.Equal(t, cmdErr.Error(), c.e.Error())
 		})
 	}
 }

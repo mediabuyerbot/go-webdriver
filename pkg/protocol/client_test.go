@@ -115,7 +115,7 @@ func TestHttpClient_HandleErrorWithoutStatusCode(t *testing.T) {
 
 	assert.Equal(t, cmdErr.Code, "unexpected alert open")
 	assert.Equal(t, cmdErr.Message, "error")
-	assert.Equal(t, cmdErr.StackTrace, "stacktrace")
+	assert.Equal(t, cmdErr.RawStacktrace, "stacktrace")
 	assert.Equal(t, cmdErr.Data["text"], "Message from window.alert")
 }
 

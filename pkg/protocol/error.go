@@ -5,23 +5,21 @@ import (
 	"fmt"
 )
 
-type StackFrame struct {
-	FileName   string
-	ClassName  string
-	MethodName string
-	LineNumber int
-}
-
 // Error represents a WebDriver protocol error.
 type Error struct {
-	Code       string                 `json:"error"`
-	Message    string                 `json:"message"`
-	StackTrace string                 `json:"stacktrace"`
-	Data       map[string]interface{} `json:"data"`
+	Code          string                 `json:"error"`
+	Message       string                 `json:"message"`
+	RawStacktrace string                 `json:"stacktrace"`
+	Data          map[string]interface{} `json:"data"`
+
+	Stacktrace []string
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("%s %s", e.Message, e.Code)
+	return fmt.Sprintf("ErrorCode:%s, Message:%s",
+		e.Code,
+		e.Message,
+	)
 }
 
 func parseError(respStatusCode int, resp *Response) error {
@@ -34,10 +32,10 @@ func parseError(respStatusCode int, resp *Response) error {
 	}
 
 	var (
-		isNullValue                     = string(resp.Value) == "null"
-		isErrorWithStatusAndPayloadNull = resp.Status > 0 && isNullValue
-		isErrorWithStatusAndPayload     = resp.Status > 0
-		isErrorWithoutAndPayloadNull    = resp.Status == 0 && isNullValue
+		isNullValue                        = string(resp.Value) == "null"
+		isErrorWithStatusAndPayloadNull    = resp.Status > 0 && isNullValue
+		isErrorWithStatusAndPayload        = resp.Status > 0
+		isErrorWithoutStatusAndPayloadNull = resp.Status == 0 && isNullValue
 	)
 
 	switch {
@@ -63,7 +61,7 @@ func parseError(respStatusCode int, resp *Response) error {
 		}
 
 	// {"value": null} httpStatus >= 400
-	case isErrorWithoutAndPayloadNull:
+	case isErrorWithoutStatusAndPayloadNull:
 		cmdErr.Code = httpStatusCode(respStatusCode)
 		cmdErr.Message = cmdErr.Code
 
