@@ -4,11 +4,11 @@ deps:
 	go mod download
 
 test: deps
-	go test  -coverprofile=coverage.out `go list ./... | grep -v test`
+	go test -cover `go list ./... | grep -v test`
 
 integration: deps
-	docker-compose -f ./test/docker-compose.yml up --build --abort-on-container-exit
-	docker-compose -f ./test/docker-compose.yml down --volumes
+	docker-compose -f ./test/integration/docker-compose.yml up --build --abort-on-container-exit
+	docker-compose -f ./test/integration/docker-compose.yml down --volumes
 
 covertest: deps
 	go test  -coverprofile=coverage.out `go list ./... | grep -v test`

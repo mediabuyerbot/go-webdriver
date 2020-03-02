@@ -1,4 +1,4 @@
-package test
+package integration
 
 import (
 	"context"
@@ -10,10 +10,10 @@ import (
 	"github.com/mediabuyerbot/go-webdriver"
 )
 
-const chromeRemoteAddrKey = "WEBGO_CHROMEDRIVER_ADDR"
+const firefoxRemoteAddrKey = "WEBGO_FIREFOXDRIVER_ADDR"
 
-func chromeBrowser(t *testing.T) (webdriver.Session, func()) {
-	addr := os.Getenv(chromeRemoteAddrKey)
+func firefoxBrowser(t *testing.T) (webdriver.Session, func()) {
+	addr := os.Getenv(firefoxRemoteAddrKey)
 	if len(addr) == 0 {
 		t.Skip()
 	}
@@ -21,11 +21,10 @@ func chromeBrowser(t *testing.T) (webdriver.Session, func()) {
 		addr,
 		webdriver.DesiredCapabilities{
 			"platform": "linux",
-			"chromeOptions": map[string][]string{
+			"firefoxOptions": map[string]interface{}{
+				"log": "{\"level\": \"trace\"}",
 				"args": []string{
-					"--headless",
-					"--disable-gpu",
-					"--no-sandbox",
+					"-headless",
 				},
 			},
 		},
@@ -41,13 +40,13 @@ func chromeBrowser(t *testing.T) (webdriver.Session, func()) {
 	}
 }
 
-func TestChrome_Sessions(t *testing.T) {
-	browser, closeSession := chromeBrowser(t)
+func TestFirefox_Sessions(t *testing.T) {
+	browser, closeSession := firefoxBrowser(t)
 	defer closeSession()
 
 	ctx := context.Background()
 	capabilities := browser.Session().Capabilities()
-	assert.Equal(t, capabilities.BrowserName(), "chrome")
+	assert.Equal(t, capabilities.BrowserName(), "firefox")
 	assert.NotEmpty(t, browser.SessionID())
 
 	status, err := browser.Session().Status(ctx)
@@ -55,8 +54,8 @@ func TestChrome_Sessions(t *testing.T) {
 	assert.True(t, status.Ready)
 }
 
-//func TestChromedriverSessionCapabilities(t *testing.T) {
-//	b, c := newChromeBrowser(t)
+//func TestSessionFirefoxdriverSessionCapabilities(t *testing.T) {
+//	b, c := newFirefoxBrowser(t)
 //	defer c()
 //
 //	ctx := context.Background()
@@ -65,27 +64,22 @@ func TestChrome_Sessions(t *testing.T) {
 //	b.Session().SetTimeouts(ctx, protocol.ImplicitTimeout, protocol.DefaultTimeoutMs)
 //	b.Session().SetTimeouts(ctx, protocol.PageLoadTimeout, protocol.DefaultTimeoutMs)
 //	b.Session().SetTimeouts(ctx, protocol.ScriptTimeout, protocol.DefaultTimeoutMs)
+//
 //	timeoutInfo, err := b.Session().GetTimeouts(ctx)
 //	assert.Nil(t, err)
 //	assert.Equal(t, timeoutInfo.Implicit, protocol.DefaultTimeoutMs, "timeoutInfo.Implicit")
 //	assert.Equal(t, timeoutInfo.PageLoad, protocol.DefaultTimeoutMs, "timeoutInfo.PageLoad")
 //	assert.Equal(t, timeoutInfo.Script, protocol.DefaultTimeoutMs, "timeoutInfo.Script")
 //
+//	// session id
+//	assert.NotEmpty(t, b.SessionID())
+//
 //	// capabilities
 //	cap := b.Session().Capabilities()
-//	assert.Equal(t, cap["javascriptEnabled"].(bool), true, "javascriptEnabled")
-//	assert.Equal(t, cap["databaseEnabled"].(bool), false, "databaseEnabled")
-//	assert.Equal(t, cap["nativeEvents"].(bool), true, "nativeEvents")
-//
-//	// session id
-//	assert.NotEmpty(t, b.Session().ID())
+//	assert.Equal(t, cap["browserName"].(string), "firefox", "browserName")
 //
 //	// session status
 //	status, err := b.Session().Status(ctx)
 //	assert.Nil(t, err, "session get status")
-//	assert.NotEmpty(t, status["build"].(map[string]interface{})["version"])
-//
-//	// session delete
-//	err = b.Session().Delete(ctx)
-//	assert.Nil(t, err)
+//	assert.False(t, status["ready"].(bool))
 //}

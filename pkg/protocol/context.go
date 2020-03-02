@@ -17,6 +17,9 @@ type Context interface {
 	// CloseWindow close the current window.
 	CloseWindow(context.Context) ([]WindowHandle, error)
 
+	// NewWindow create a new top-level browsing context.
+	NewWindow(context.Context) (Window, error)
+
 	// SwitchToWindow switching window will select the current top-level browsing context used as the target
 	// for all subsequent commands. In a tabbed browser, this will typically make the tab containing
 	// the browsing context the selected tab.
@@ -47,26 +50,54 @@ type Context interface {
 	Minimize(context.Context) error
 
 	// Fullscreen fullscreen mode.
-	Fullscreen(context.Context) error
+	Fullscreen(context.Context) (Rect, error)
 }
 
-type Rect struct {
-	Width  int  `json:"width"`
-	Height int  `json:"height"`
-	Y      uint `json:"y"`
-	X      uint `json:"x"`
-}
+const (
+	Tab WindowType = "tab"
+	Win WindowType = "window"
+)
 
-type WindowHandle string
+type (
+	WindowType   string
+	WindowHandle string
+	FrameHandle  string
+)
 
 func (wh WindowHandle) String() string {
 	return string(wh)
 }
 
-type FrameHandle string
+func (wt WindowType) String() string {
+	return string(wt)
+}
 
 func (fh FrameHandle) String() string {
 	return string(fh)
+}
+
+type Rect struct {
+	Width  int `json:"width"`
+	Height int `json:"height"`
+	Y      int `json:"y"`
+	X      int `json:"x"`
+}
+
+type Window struct {
+	Handle WindowHandle `json:"handle"`
+	Type   WindowType   `json:"type"`
+}
+
+func (w Window) String() string {
+	return string(w.Handle)
+}
+
+type Frame struct {
+	Handle FrameHandle `json:"handle"`
+}
+
+func (f Frame) String() string {
+	return f.Handle.String()
 }
 
 type sessionContext struct {
@@ -80,6 +111,17 @@ func NewContext(cli Client, sessID string) Context {
 		id:     sessID,
 		client: cli,
 	}
+}
+
+func (c *sessionContext) NewWindow(ctx context.Context) (w Window, err error) {
+	resp, err := c.client.Post(ctx, "/session/"+c.id+"/window/new", nil)
+	if err != nil {
+		return w, err
+	}
+	if err := json.Unmarshal(resp.Value, &w); err != nil {
+		return w, err
+	}
+	return w, nil
 }
 
 func (c *sessionContext) GetWindowHandle(ctx context.Context) (wh WindowHandle, err error) {
@@ -205,13 +247,13 @@ func (c *sessionContext) Minimize(ctx context.Context) error {
 	return ErrInvalidResponse
 }
 
-func (c *sessionContext) Fullscreen(ctx context.Context) error {
-	resp, err := c.client.Post(ctx, "/session/"+c.id+"/window/fullscreen ", nil)
+func (c *sessionContext) Fullscreen(ctx context.Context) (r Rect, err error) {
+	resp, err := c.client.Post(ctx, "/session/"+c.id+"/window/fullscreen", nil)
 	if err != nil {
-		return err
+		return r, err
 	}
-	if resp.Success() {
-		return nil
+	if err := json.Unmarshal(resp.Value, &r); err != nil {
+		return r, err
 	}
-	return ErrInvalidResponse
+	return r, nil
 }

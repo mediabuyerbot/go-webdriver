@@ -28,7 +28,7 @@ services:
       - chromedriver
       - firefoxdriver
     build:
-      context: .
+      context: ..
     volumes:
       - $PWD:/go/src/github.com/mediabuyerbot/go-webdriver
     networks:
