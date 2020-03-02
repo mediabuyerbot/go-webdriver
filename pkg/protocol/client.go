@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -42,7 +41,6 @@ func (c *httpClient) handleResponse(r *http.Response) (resp *Response, err error
 	if err != nil {
 		return nil, err
 	}
-	log.Println("RESP", string(buf))
 	if err := json.Unmarshal(buf, &resp); err != nil {
 		return nil, err
 	}

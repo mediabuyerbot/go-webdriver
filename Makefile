@@ -1,17 +1,24 @@
-.PHONY: dep test int-test unit-test mocks
+.PHONY: deps test int-test unit-test mocks cover sync-coveralls
 
-dep:
-	go mod vendor
+deps:
+	go mod download
 
-unit-test: dep
-	go test  -coverprofile=coverage.out `go list ./... | grep -v test` -v
-	go tool cover -html=coverage.out
+test: deps
+	go test  -coverprofile=coverage.out `go list ./... | grep -v test`
 
-int-test: dep
+integration: deps
 	docker-compose -f ./test/docker-compose.yml up --build --abort-on-container-exit
 	docker-compose -f ./test/docker-compose.yml down --volumes
 
-mocks: dep
+covertest: deps
+	go test  -coverprofile=coverage.out `go list ./... | grep -v test`
+	go tool cover -html=coverage.out
+
+sync-coveralls: deps
+	go test  -coverprofile=coverage.out `go list ./... | grep -v test`
+	goveralls -coverprofile=coverage.out -reponame=go-webdriver -repotoken=${COVERALLS_GO_WEBDRIVER_TOKEN} -service=local
+
+mocks: deps
 	mockgen -package=protocol -destination=pkg/protocol/client_mock.go -source=pkg/protocol/client.go
 	mockgen -package=protocol -destination=pkg/protocol/session_mock.go -source=pkg/protocol/session.go
 	mockgen -package=protocol -destination=pkg/protocol/timeouts_mock.go -source=pkg/protocol/timeouts.go

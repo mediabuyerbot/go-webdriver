@@ -30,6 +30,9 @@ type Session interface {
 	// Navigation returns the implementation of the navigation protocol
 	Navigation() protocol.Navigation
 
+	// Context returns the implementation of the context protocol
+	Context() protocol.Context
+
 	// Close close the current session.
 	Close(ctx context.Context) error
 }
@@ -43,7 +46,7 @@ type session struct {
 	session    protocol.Session
 	timeouts   protocol.Timeouts
 	navigation protocol.Navigation
-	commandCtx *protocol.CommandContext
+	context    protocol.Context
 }
 
 func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r RequiredCapabilities) (Session, error) {
@@ -57,7 +60,7 @@ func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r Req
 		session:    sess,
 		timeouts:   protocol.NewTimeouts(cli, sess.ID()),
 		navigation: protocol.NewNavigation(cli, sess.ID()),
-		// commandCtx: protocol.NewCommandContext(cli, sess.ID()),
+		context:    protocol.NewContext(cli, sess.ID()),
 	}
 	return &browser, nil
 }
@@ -92,10 +95,9 @@ func (b *session) Navigation() protocol.Navigation {
 	return b.navigation
 }
 
-//
-//func (b *Session) CommandContext() *protocol.CommandContext {
-//	return b.commandCtx
-//}
+func (b *session) Context() protocol.Context {
+	return b.context
+}
 
 func (b *session) Close(ctx context.Context) error {
 	return b.session.Delete(ctx)
