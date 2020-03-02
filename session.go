@@ -36,6 +36,9 @@ type Session interface {
 	// Cookies returns a cookies protocol.
 	Cookies() protocol.Cookies
 
+	// Document returns a document protocol.
+	Document() protocol.Document
+
 	// Close close the current session.
 	Close(ctx context.Context) error
 }
@@ -51,6 +54,7 @@ type session struct {
 	navigation protocol.Navigation
 	context    protocol.Context
 	cookies    protocol.Cookies
+	document   protocol.Document
 }
 
 func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r RequiredCapabilities) (Session, error) {
@@ -66,6 +70,7 @@ func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r Req
 		navigation: protocol.NewNavigation(cli, sess.ID()),
 		context:    protocol.NewContext(cli, sess.ID()),
 		cookies:    protocol.NewCookies(cli, sess.ID()),
+		document:   protocol.NewDocument(cli, sess.ID()),
 	}
 	return &browser, nil
 }
@@ -112,6 +117,11 @@ func (b *session) Context() protocol.Context {
 // Cookies returns a cookies protocol.
 func (b *session) Cookies() protocol.Cookies {
 	return b.cookies
+}
+
+// Document returns a document protocol.
+func (b *session) Document() protocol.Document {
+	return b.document
 }
 
 // Close close the current session.
