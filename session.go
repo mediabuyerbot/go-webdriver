@@ -21,17 +21,20 @@ type Session interface {
 	// SessionID returns the unique session id.
 	SessionID() string
 
-	// Session returns the implementation of the session protocol
+	// Session returns a session protocol.
 	Session() protocol.Session
 
-	// Timeouts returns the implementation of the timeouts protocol
+	// Timeouts returns a timeouts protocol.
 	Timeouts() protocol.Timeouts
 
-	// Navigation returns the implementation of the navigation protocol
+	// Navigation returns a navigation protocol.
 	Navigation() protocol.Navigation
 
-	// Context returns the implementation of the context protocol
+	// Context returns a context protocol.
 	Context() protocol.Context
+
+	// Cookies returns a cookies protocol.
+	Cookies() protocol.Cookies
 
 	// Close close the current session.
 	Close(ctx context.Context) error
@@ -47,10 +50,11 @@ type session struct {
 	timeouts   protocol.Timeouts
 	navigation protocol.Navigation
 	context    protocol.Context
+	cookies    protocol.Cookies
 }
 
 func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r RequiredCapabilities) (Session, error) {
-	cli := protocol.NewClient(client)
+	cli := protocol.NewTransport(client)
 	sess, err := protocol.NewSession(cli, d, r)
 	if err != nil {
 		return nil, err
@@ -61,6 +65,7 @@ func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r Req
 		timeouts:   protocol.NewTimeouts(cli, sess.ID()),
 		navigation: protocol.NewNavigation(cli, sess.ID()),
 		context:    protocol.NewContext(cli, sess.ID()),
+		cookies:    protocol.NewCookies(cli, sess.ID()),
 	}
 	return &browser, nil
 }
@@ -79,26 +84,37 @@ func NewSession(addr string, d DesiredCapabilities, r RequiredCapabilities) (Ses
 	return NewSessionFromClient(client, d, r)
 }
 
+// SessionID returns the unique session id.
 func (b *session) SessionID() string {
 	return b.session.ID()
 }
 
+// Session returns a session protocol.
 func (b *session) Session() protocol.Session {
 	return b.session
 }
 
+// Timeouts returns a timeouts protocol.
 func (b *session) Timeouts() protocol.Timeouts {
 	return b.timeouts
 }
 
+// Navigation returns a navigation protocol.
 func (b *session) Navigation() protocol.Navigation {
 	return b.navigation
 }
 
+// Context returns a context protocol.
 func (b *session) Context() protocol.Context {
 	return b.context
 }
 
+// Cookies returns a cookies protocol.
+func (b *session) Cookies() protocol.Cookies {
+	return b.cookies
+}
+
+// Close close the current session.
 func (b *session) Close(ctx context.Context) error {
 	return b.session.Delete(ctx)
 }

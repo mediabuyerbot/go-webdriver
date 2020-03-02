@@ -19,7 +19,7 @@ sync-coveralls: deps
 	goveralls -coverprofile=coverage.out -reponame=go-webdriver -repotoken=${COVERALLS_GO_WEBDRIVER_TOKEN} -service=local
 
 mocks: deps
-	mockgen -package=protocol -destination=pkg/protocol/client_mock.go -source=pkg/protocol/client.go
+	mockgen -package=protocol -destination=pkg/protocol/transport_mock.go -source=pkg/protocol/transport.go
 	mockgen -package=protocol -destination=pkg/protocol/session_mock.go -source=pkg/protocol/session.go
 	mockgen -package=protocol -destination=pkg/protocol/timeouts_mock.go -source=pkg/protocol/timeouts.go
 	mockgen -package=protocol -destination=pkg/protocol/navigation_mock.go -source=pkg/protocol/navigation.go

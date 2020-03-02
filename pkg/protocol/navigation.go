@@ -1,6 +1,9 @@
 package protocol
 
-import "context"
+import (
+	"context"
+	"net/http"
+)
 
 // Navigation represents a navigation of the current session context
 type Navigation interface {
@@ -25,20 +28,20 @@ type Navigation interface {
 }
 
 type navigation struct {
-	id     string
-	client Client
+	id      string
+	request Doer
 }
 
 // NewNavigation creates a new instance of Navigation.
-func NewNavigation(cli Client, sessID string) Navigation {
+func NewNavigation(doer Doer, sessID string) Navigation {
 	return &navigation{
-		id:     sessID,
-		client: cli,
+		id:      sessID,
+		request: doer,
 	}
 }
 
 func (n *navigation) NavigateTo(ctx context.Context, url string) (err error) {
-	resp, err := n.client.Post(ctx, "/session/"+n.id+"/url", params{"url": url})
+	resp, err := n.request.Do(ctx, http.MethodPost, "/session/"+n.id+"/url", Params{"url": url})
 	if err != nil {
 		return err
 	}
@@ -49,7 +52,7 @@ func (n *navigation) NavigateTo(ctx context.Context, url string) (err error) {
 }
 
 func (n *navigation) GetCurrentURL(ctx context.Context) (s string, err error) {
-	resp, err := n.client.Get(ctx, "/session/"+n.id+"/url")
+	resp, err := n.request.Do(ctx, http.MethodGet, "/session/"+n.id+"/url", nil)
 	if err != nil {
 		return s, err
 	}
@@ -57,7 +60,7 @@ func (n *navigation) GetCurrentURL(ctx context.Context) (s string, err error) {
 }
 
 func (n *navigation) Back(ctx context.Context) error {
-	resp, err := n.client.Post(ctx, "/session/"+n.id+"/back", nil)
+	resp, err := n.request.Do(ctx, http.MethodPost, "/session/"+n.id+"/back", nil)
 	if err != nil {
 		return err
 	}
@@ -68,7 +71,7 @@ func (n *navigation) Back(ctx context.Context) error {
 }
 
 func (n *navigation) Forward(ctx context.Context) error {
-	resp, err := n.client.Post(ctx, "/session/"+n.id+"/forward", nil)
+	resp, err := n.request.Do(ctx, http.MethodPost, "/session/"+n.id+"/forward", nil)
 	if err != nil {
 		return err
 	}
@@ -79,7 +82,7 @@ func (n *navigation) Forward(ctx context.Context) error {
 }
 
 func (n *navigation) Refresh(ctx context.Context) error {
-	resp, err := n.client.Post(ctx, "/session/"+n.id+"/refresh", nil)
+	resp, err := n.request.Do(ctx, http.MethodPost, "/session/"+n.id+"/refresh", nil)
 	if err != nil {
 		return err
 	}
@@ -90,7 +93,7 @@ func (n *navigation) Refresh(ctx context.Context) error {
 }
 
 func (n *navigation) GetTitle(ctx context.Context) (title string, err error) {
-	resp, err := n.client.Get(ctx, "/session/"+n.id+"/title")
+	resp, err := n.request.Do(ctx, http.MethodGet, "/session/"+n.id+"/title", nil)
 	if err != nil {
 		return title, err
 	}

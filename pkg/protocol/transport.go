@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -11,32 +12,38 @@ import (
 	"github.com/mediabuyerbot/go-webdriver/pkg/httpclient"
 )
 
-type Client interface {
-	Delete(ctx context.Context, path string) (resp *Response, err error)
-	Get(ctx context.Context, path string) (resp *Response, err error)
-	Post(ctx context.Context, path string, params interface{}) (resp *Response, err error)
+type Doer interface {
+	Do(ctx context.Context, method string, path string, p Params) (resp *Response, err error)
 }
 
-type params map[string]interface{}
+// Params represents the key-value pairs.
+type Params map[string]interface{}
 
-type httpClient struct {
+// Set sets the params entries associated with key to the
+// single element value. It replaces any existing values
+// associated with key.
+func (p Params) Set(key string, value interface{}) {
+	p[key] = value
+}
+
+type transport struct {
 	client  httpclient.Client
 	Headers http.Header
 }
 
-func NewClient(client httpclient.Client) Client {
+func NewTransport(client httpclient.Client) Doer {
 	headers := make(http.Header)
 	headers.Add("Content-Type", "application/json;charset=utf-8")
 	headers.Add("Accept", "application/json")
 	headers.Add("Accept-charset", "utf-8")
 	headers.Add("Cache-Control", "no-cache")
-	return &httpClient{
+	return &transport{
 		client:  client,
 		Headers: headers,
 	}
 }
 
-func (c *httpClient) handleResponse(r *http.Response) (resp *Response, err error) {
+func (c *transport) handleResponse(r *http.Response) (resp *Response, err error) {
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
@@ -51,7 +58,21 @@ func (c *httpClient) handleResponse(r *http.Response) (resp *Response, err error
 	return resp, nil
 }
 
-func (c *httpClient) Delete(ctx context.Context, path string) (resp *Response, err error) {
+func (c *transport) Do(ctx context.Context, method string, path string, p Params) (resp *Response, err error) {
+	switch method {
+	case http.MethodGet:
+		resp, err = c.getRequest(ctx, path)
+	case http.MethodDelete:
+		resp, err = c.deleteRequest(ctx, path)
+	case http.MethodPost:
+		resp, err = c.postRequest(ctx, path, p)
+	default:
+		err = errors.New("protocol: unknown HTTP method")
+	}
+	return resp, err
+}
+
+func (c *transport) deleteRequest(ctx context.Context, path string) (resp *Response, err error) {
 	httpResp, err := c.client.Delete(ctx, path, c.Headers)
 	if err != nil {
 		return nil, err
@@ -59,7 +80,7 @@ func (c *httpClient) Delete(ctx context.Context, path string) (resp *Response, e
 	return c.handleResponse(httpResp)
 }
 
-func (c *httpClient) Get(ctx context.Context, path string) (resp *Response, err error) {
+func (c *transport) getRequest(ctx context.Context, path string) (resp *Response, err error) {
 	httpResp, err := c.client.Get(ctx, path, c.Headers)
 	if err != nil {
 		return nil, err
@@ -67,7 +88,7 @@ func (c *httpClient) Get(ctx context.Context, path string) (resp *Response, err 
 	return c.handleResponse(httpResp)
 }
 
-func (c *httpClient) Post(ctx context.Context, path string, params interface{}) (resp *Response, err error) {
+func (c *transport) postRequest(ctx context.Context, path string, params interface{}) (resp *Response, err error) {
 	if params == nil {
 		params = map[string]interface{}{}
 	}

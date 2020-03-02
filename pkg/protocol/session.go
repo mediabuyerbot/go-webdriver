@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 )
 
 // ErrUnknownSession returns when a new session is created with empty sessionId.
@@ -29,9 +30,9 @@ type Session interface {
 
 type (
 	session struct {
-		id     string
-		client Client
-		cap    Capabilities
+		id      string
+		request Doer
+		cap     Capabilities
 	}
 )
 
@@ -60,18 +61,18 @@ func (s Status) HasExtensionInfo() bool {
 // NewSession creates a new instance of Session.
 // The new session command creates a new WebDriver session with the endpoint node. If the creation fails,
 // a session not created error is returned.
-func NewSession(client Client, desired, required interface{}) (Session, error) {
+func NewSession(doer Doer, desired, required interface{}) (Session, error) {
 	if desired == nil {
 		desired = map[string]interface{}{}
 	}
 	if required == nil {
 		required = map[string]interface{}{}
 	}
-	params := params{
+	params := Params{
 		"desiredCapabilities":  desired,
 		"requiredCapabilities": required,
 	}
-	resp, err := client.Post(context.Background(), "/session", params)
+	resp, err := doer.Do(context.Background(), http.MethodPost, "/session", params)
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +97,9 @@ func NewSession(client Client, desired, required interface{}) (Session, error) {
 		}
 	}
 	return &session{
-		id:     sessID,
-		cap:    capabilities,
-		client: client,
+		id:      sessID,
+		cap:     capabilities,
+		request: doer,
 	}, nil
 }
 
@@ -114,7 +115,7 @@ func (s *session) Capabilities() Capabilities {
 
 // Delete delete the session.
 func (s *session) Delete(ctx context.Context) error {
-	_, err := s.client.Delete(ctx, "/session/"+s.id)
+	_, err := s.request.Do(ctx, http.MethodDelete, "/session/"+s.id, nil)
 	if err != nil {
 		return err
 	}
@@ -125,7 +126,7 @@ func (s *session) Delete(ctx context.Context) error {
 // in which it can create new sessions, but may additionally include arbitrary
 // meta information that is specific to the implementation.
 func (s *session) Status(ctx context.Context) (st Status, err error) {
-	resp, err := s.client.Get(ctx, "/status")
+	resp, err := s.request.Do(ctx, http.MethodGet, "/status", nil)
 	if err != nil {
 		return st, err
 	}

@@ -16,11 +16,11 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
-func TestNewClient(t *testing.T) {
+func TestNewTransport(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	httpCli := httpclient.NewMockClient(ctrl)
-	client := NewClient(httpCli).(*httpClient)
+	client := NewTransport(httpCli).(*transport)
 	assert.Equal(t, client.Headers.Get("Content-Type"), "application/json;charset=utf-8")
 	assert.Equal(t, client.Headers.Get("Accept"), "application/json")
 	assert.Equal(t, client.Headers.Get("Accept-charset"), "utf-8")
@@ -28,7 +28,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestHttpClient_Post(t *testing.T) {
-	param := params{"id": "id"}
+	param := Params{"id": "id"}
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPost, r.Method)
 		assert.Equal(t, r.URL.Path, "/status")
@@ -39,7 +39,7 @@ func TestHttpClient_Post(t *testing.T) {
 
 		body, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err)
-		var p params
+		var p Params
 		err = json.Unmarshal(body, &p)
 		assert.NoError(t, err)
 		assert.Equal(t, p["id"], param["id"])
@@ -53,8 +53,8 @@ func TestHttpClient_Post(t *testing.T) {
 	httpCli, err := httpclient.NewClient(srv.URL)
 	assert.Nil(t, err)
 
-	cli := NewClient(httpCli)
-	resp, err := cli.Post(context.TODO(), "/status", param)
+	cli := NewTransport(httpCli)
+	resp, err := cli.Do(context.TODO(), http.MethodPost, "/status", param)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SessionID, "1234")
 	assert.Equal(t, resp.Status, 0)
@@ -66,7 +66,7 @@ func TestHttpClient_PostWithoutParam(t *testing.T) {
 		assert.Equal(t, r.URL.Path, "/status")
 		body, err := ioutil.ReadAll(r.Body)
 		require.NoError(t, err)
-		var p params
+		var p Params
 		err = json.Unmarshal(body, &p)
 		assert.NoError(t, err)
 		w.WriteHeader(http.StatusOK)
@@ -79,8 +79,8 @@ func TestHttpClient_PostWithoutParam(t *testing.T) {
 	httpCli, err := httpclient.NewClient(srv.URL)
 	assert.Nil(t, err)
 
-	cli := NewClient(httpCli)
-	resp, err := cli.Post(context.TODO(), "/status", nil)
+	cli := NewTransport(httpCli)
+	resp, err := cli.Do(context.TODO(), http.MethodPost, "/status", nil)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SessionID, "1234")
 	assert.Equal(t, resp.Status, 0)
@@ -105,8 +105,8 @@ func TestHttpClient_HandleErrorWithoutStatusCode(t *testing.T) {
 	httpCli, err := httpclient.NewClient(srv.URL)
 	assert.Nil(t, err)
 
-	cli := NewClient(httpCli)
-	resp, err := cli.Post(context.TODO(), "/", nil)
+	cli := NewTransport(httpCli)
+	resp, err := cli.Do(context.TODO(), http.MethodPost, "/", nil)
 	assert.Nil(t, resp)
 	assert.Error(t, err)
 
@@ -131,8 +131,8 @@ func TestHttpClient_HandleErrorBadResponse(t *testing.T) {
 	httpCli, err := httpclient.NewClient(srv.URL)
 	assert.Nil(t, err)
 
-	cli := NewClient(httpCli)
-	resp, err := cli.Post(context.TODO(), "/", nil)
+	cli := NewTransport(httpCli)
+	resp, err := cli.Do(context.TODO(), http.MethodPost, "/", nil)
 	assert.Nil(t, resp)
 	assert.Error(t, err)
 }
@@ -155,8 +155,8 @@ func TestHttpClient_Delete(t *testing.T) {
 	httpCli, err := httpclient.NewClient(srv.URL)
 	assert.Nil(t, err)
 
-	cli := NewClient(httpCli)
-	resp, err := cli.Delete(context.TODO(), "/status")
+	cli := NewTransport(httpCli)
+	resp, err := cli.Do(context.TODO(), http.MethodDelete, "/status", nil)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SessionID, "")
 	assert.Equal(t, resp.Status, 0)
@@ -180,8 +180,8 @@ func TestHttpClient_Get(t *testing.T) {
 	httpCli, err := httpclient.NewClient(srv.URL)
 	assert.Nil(t, err)
 
-	cli := NewClient(httpCli)
-	resp, err := cli.Get(context.TODO(), "/status")
+	cli := NewTransport(httpCli)
+	resp, err := cli.Do(context.TODO(), http.MethodGet, "/status", nil)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SessionID, "444")
 	assert.Equal(t, resp.Status, 0)

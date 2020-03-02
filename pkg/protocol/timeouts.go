@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 )
 
 const (
@@ -55,15 +56,19 @@ type (
 )
 
 type timeouts struct {
-	id     string
-	client Client
+	id      string
+	request Doer
+}
+
+func (t Timeout) String() string {
+	return string(t)
 }
 
 // NewTimeouts creates a new instance of Timeouts.
-func NewTimeouts(client Client, sessionID string) Timeouts {
+func NewTimeouts(doer Doer, sessionID string) Timeouts {
 	return &timeouts{
-		id:     sessionID,
-		client: client,
+		id:      sessionID,
+		request: doer,
 	}
 }
 
@@ -78,7 +83,7 @@ func (t *timeouts) validate(tm Timeout) bool {
 
 // GetTimeouts returns the timeouts implicit, pageLoad, script.
 func (t *timeouts) GetTimeouts(ctx context.Context) (info TimeoutInfo, err error) {
-	resp, err := t.client.Get(ctx, "/session/"+t.id+"/timeouts")
+	resp, err := t.request.Do(ctx, http.MethodGet, "/session/"+t.id+"/timeouts", nil)
 	if err != nil {
 		return info, err
 	}
@@ -95,10 +100,15 @@ func (t *timeouts) SetTimeouts(ctx context.Context, tm Timeout, ms Ms) error {
 	if ok := t.validate(tm); !ok {
 		return ErrTimeoutConfiguration
 	}
-	if _, err := t.client.Post(ctx, "/session/"+t.id+"/timeouts", params{string(tm): ms}); err != nil {
+	p := Params{tm.String(): ms}
+	resp, err := t.request.Do(ctx, http.MethodPost, "/session/"+t.id+"/timeouts", p)
+	if err != nil {
 		return err
 	}
-	return nil
+	if resp.Success() {
+		return nil
+	}
+	return ErrInvalidResponse
 }
 
 // SetImplicitTimeout set the session implicit wait timeout.

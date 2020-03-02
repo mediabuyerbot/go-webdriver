@@ -3,6 +3,7 @@ package protocol
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 )
 
 // Context represents a window handle with a unique identifier.
@@ -101,20 +102,20 @@ func (f Frame) String() string {
 }
 
 type sessionContext struct {
-	id     string
-	client Client
+	id      string
+	request Doer
 }
 
 // NewContext creates a new instance of Context.
-func NewContext(cli Client, sessID string) Context {
+func NewContext(doer Doer, sessID string) Context {
 	return &sessionContext{
-		id:     sessID,
-		client: cli,
+		id:      sessID,
+		request: doer,
 	}
 }
 
 func (c *sessionContext) NewWindow(ctx context.Context) (w Window, err error) {
-	resp, err := c.client.Post(ctx, "/session/"+c.id+"/window/new", nil)
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/new", nil)
 	if err != nil {
 		return w, err
 	}
@@ -125,7 +126,7 @@ func (c *sessionContext) NewWindow(ctx context.Context) (w Window, err error) {
 }
 
 func (c *sessionContext) GetWindowHandle(ctx context.Context) (wh WindowHandle, err error) {
-	resp, err := c.client.Get(ctx, "/session/"+c.id+"/window")
+	resp, err := c.request.Do(ctx, http.MethodGet, "/session/"+c.id+"/window", nil)
 	if err != nil {
 		return wh, err
 	}
@@ -133,7 +134,7 @@ func (c *sessionContext) GetWindowHandle(ctx context.Context) (wh WindowHandle, 
 }
 
 func (c *sessionContext) GetWindowHandles(ctx context.Context) ([]WindowHandle, error) {
-	resp, err := c.client.Get(ctx, "/session/"+c.id+"/window/handles")
+	resp, err := c.request.Do(ctx, http.MethodGet, "/session/"+c.id+"/window/handles", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +150,7 @@ func (c *sessionContext) GetWindowHandles(ctx context.Context) ([]WindowHandle, 
 }
 
 func (c *sessionContext) CloseWindow(ctx context.Context) ([]WindowHandle, error) {
-	resp, err := c.client.Delete(ctx, "/session/"+c.id+"/window")
+	resp, err := c.request.Do(ctx, http.MethodDelete, "/session/"+c.id+"/window", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +166,7 @@ func (c *sessionContext) CloseWindow(ctx context.Context) ([]WindowHandle, error
 }
 
 func (c *sessionContext) SwitchToWindow(ctx context.Context, h WindowHandle) error {
-	resp, err := c.client.Post(ctx, "/session/"+c.id+"/window", params{"name": h})
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window", Params{"name": h})
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,7 @@ func (c *sessionContext) SwitchToWindow(ctx context.Context, h WindowHandle) err
 }
 
 func (c *sessionContext) SwitchToFrame(ctx context.Context, h FrameHandle) error {
-	resp, err := c.client.Post(ctx, "/session/"+c.id+"/frame", params{"id": h})
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/frame", Params{"id": h})
 	if err != nil {
 		return err
 	}
@@ -187,7 +188,7 @@ func (c *sessionContext) SwitchToFrame(ctx context.Context, h FrameHandle) error
 }
 
 func (c *sessionContext) SwitchToParentFrame(ctx context.Context) error {
-	resp, err := c.client.Post(ctx, "/session/"+c.id+"/frame/parent", nil)
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/frame/parent", nil)
 	if err != nil {
 		return err
 	}
@@ -198,13 +199,13 @@ func (c *sessionContext) SwitchToParentFrame(ctx context.Context) error {
 }
 
 func (c *sessionContext) SetRect(ctx context.Context, r Rect) error {
-	params := params{
+	p := Params{
 		"width":  r.Width,
 		"height": r.Height,
 		"x":      r.X,
 		"y":      r.Y,
 	}
-	resp, err := c.client.Post(ctx, "/session/"+c.id+"/window/rect", params)
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/rect", p)
 	if err != nil {
 		return err
 	}
@@ -215,7 +216,7 @@ func (c *sessionContext) SetRect(ctx context.Context, r Rect) error {
 }
 
 func (c *sessionContext) GetRect(ctx context.Context) (r Rect, err error) {
-	resp, err := c.client.Get(ctx, "/session/"+c.id+"/window/rect")
+	resp, err := c.request.Do(ctx, http.MethodGet, "/session/"+c.id+"/window/rect", nil)
 	if err != nil {
 		return r, err
 	}
@@ -226,7 +227,7 @@ func (c *sessionContext) GetRect(ctx context.Context) (r Rect, err error) {
 }
 
 func (c *sessionContext) Maximize(ctx context.Context) error {
-	resp, err := c.client.Post(ctx, "/session/"+c.id+"/window/maximize", nil)
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/maximize", nil)
 	if err != nil {
 		return err
 	}
@@ -237,7 +238,7 @@ func (c *sessionContext) Maximize(ctx context.Context) error {
 }
 
 func (c *sessionContext) Minimize(ctx context.Context) error {
-	resp, err := c.client.Post(ctx, "/session/"+c.id+"/window/minimize", nil)
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/minimize", nil)
 	if err != nil {
 		return err
 	}
@@ -248,7 +249,7 @@ func (c *sessionContext) Minimize(ctx context.Context) error {
 }
 
 func (c *sessionContext) Fullscreen(ctx context.Context) (r Rect, err error) {
-	resp, err := c.client.Post(ctx, "/session/"+c.id+"/window/fullscreen", nil)
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/fullscreen", nil)
 	if err != nil {
 		return r, err
 	}

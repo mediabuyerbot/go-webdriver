@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,11 +25,11 @@ func TestSessionContext_CloseWindow(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
-	cli.EXPECT().Delete(ctx, "/session/123/window").Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodDelete, "/session/123/window", nil).Times(1).Return(
 		&Response{
 			SessionID: "",
 			Value:     []byte(`["CDwindow-2AAB7036D24C6759EED24640084481B7", "CDwindow-2AAB7036D24C6759EED24640084481B8"]`),
@@ -41,14 +42,14 @@ func TestSessionContext_CloseWindow(t *testing.T) {
 
 	// returns error
 	someErr := errors.New("some error")
-	cli.EXPECT().Delete(ctx, "/session/123/window").Times(1).Return(nil, someErr)
+	cli.EXPECT().Do(ctx, http.MethodDelete, "/session/123/window", nil).Times(1).Return(nil, someErr)
 	windowHandles, err = cx.CloseWindow(ctx)
 	assert.Error(t, err)
 	assert.Equal(t, err, someErr)
 	assert.Nil(t, windowHandles)
 
 	// returns error (bad JSON format)
-	cli.EXPECT().Delete(ctx, "/session/123/window").Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodDelete, "/session/123/window", nil).Times(1).Return(
 		&Response{
 			SessionID: "",
 			Value:     []byte(`[CDwindow-2AAB7036D24C6759EED24640084481B7"]`),
@@ -61,11 +62,11 @@ func TestSessionContext_Fullscreen(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
-	cli.EXPECT().Post(ctx, "/session/123/window/fullscreen", nil).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/fullscreen", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`{
                   "height": 1050,
@@ -73,7 +74,7 @@ func TestSessionContext_Fullscreen(t *testing.T) {
                   "x": -2000,
                   "y": 4000
            }`),
-		}, nil).Do(func(_ context.Context, path string, p params) {
+		}, nil).Do(func(_ context.Context, method string, path string, p Params) {
 		assert.Nil(t, p)
 	})
 
@@ -85,12 +86,12 @@ func TestSessionContext_Fullscreen(t *testing.T) {
 	assert.Equal(t, r.Y, 4000)
 
 	// returns error
-	cli.EXPECT().Post(ctx, "/session/123/window/fullscreen", nil).Times(1).Return(nil, errors.New("some error"))
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/fullscreen", nil).Times(1).Return(nil, errors.New("some error"))
 	r, err = cx.Fullscreen(ctx)
 	assert.Error(t, err)
 
 	// returns success (bad JSON format)
-	cli.EXPECT().Post(ctx, "/session/123/window/fullscreen", nil).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/fullscreen", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`{
                   "height: 1050,
@@ -98,7 +99,7 @@ func TestSessionContext_Fullscreen(t *testing.T) {
                   "x: -2000,
                   "y: 4000
            }`),
-		}, nil).Do(func(_ context.Context, path string, p params) {
+		}, nil).Do(func(_ context.Context, method string, path string, p Params) {
 		assert.Nil(t, p)
 	})
 
@@ -110,11 +111,11 @@ func TestSessionContext_Maximize(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
-	cli.EXPECT().Post(ctx, "/session/123/window/maximize", nil).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/maximize", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`null`),
 		}, nil)
@@ -122,13 +123,13 @@ func TestSessionContext_Maximize(t *testing.T) {
 	assert.Nil(t, err)
 
 	// returns error
-	cli.EXPECT().Post(ctx, "/session/123/window/maximize", nil).Times(1).Return(nil,
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/maximize", nil).Times(1).Return(nil,
 		errors.New("some error"))
 	err = cx.Maximize(ctx)
 	assert.Error(t, err)
 
 	// returns error (invalid response)
-	cli.EXPECT().Post(ctx, "/session/123/window/maximize", nil).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/maximize", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`{}`),
 		}, nil)
@@ -141,11 +142,11 @@ func TestSessionContext_Minimize(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
-	cli.EXPECT().Post(ctx, "/session/123/window/minimize", nil).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/minimize", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`null`),
 		}, nil)
@@ -153,13 +154,13 @@ func TestSessionContext_Minimize(t *testing.T) {
 	assert.Nil(t, err)
 
 	// returns error
-	cli.EXPECT().Post(ctx, "/session/123/window/minimize", nil).Times(1).Return(nil,
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/minimize", nil).Times(1).Return(nil,
 		errors.New("some error"))
 	err = cx.Minimize(ctx)
 	assert.Error(t, err)
 
 	// returns error (invalid response)
-	cli.EXPECT().Post(ctx, "/session/123/window/minimize", nil).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/minimize", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`{}`),
 		}, nil)
@@ -172,11 +173,11 @@ func TestSessionContext_GetRect(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
-	cli.EXPECT().Get(ctx, "/session/123/window/rect").Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window/rect", nil).Times(1).Return(
 		&Response{
 			SessionID: "123",
 			Status:    0,
@@ -199,13 +200,13 @@ func TestSessionContext_GetRect(t *testing.T) {
 
 	// returns error
 	cmdErr := &Error{Code: "code", Message: "msg"}
-	cli.EXPECT().Get(ctx, "/session/123/window/rect").Times(1).Return(nil, cmdErr)
+	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window/rect", nil).Times(1).Return(nil, cmdErr)
 	r, err = cx.GetRect(ctx)
 	assert.Error(t, err)
 	assert.Equal(t, err, cmdErr)
 
 	// returns error (bad JSON format)
-	cli.EXPECT().Get(ctx, "/session/123/window/rect").Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window/rect", nil).Times(1).Return(
 		&Response{
 			SessionID: "123",
 			Status:    0,
@@ -223,7 +224,7 @@ func TestSessionContext_SetRect(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
@@ -233,10 +234,10 @@ func TestSessionContext_SetRect(t *testing.T) {
 		X:      1,
 		Y:      2,
 	}
-	cli.EXPECT().Post(ctx, "/session/123/window/rect", gomock.Any()).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/rect", gomock.Any()).Times(1).Return(
 		&Response{
 			Value: []byte(`null`),
-		}, nil).Do(func(_ context.Context, path string, p params) {
+		}, nil).Do(func(_ context.Context, method string, path string, p Params) {
 		assert.Equal(t, p["width"], newRect.Width)
 		assert.Equal(t, p["height"], newRect.Height)
 		assert.Equal(t, p["x"], newRect.X)
@@ -250,13 +251,13 @@ func TestSessionContext_SetRect(t *testing.T) {
 		Code:    "code",
 		Message: "msg",
 	}
-	cli.EXPECT().Post(ctx, "/session/123/window/rect", gomock.Any()).Times(1).Return(nil, cmdErr)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/rect", gomock.Any()).Times(1).Return(nil, cmdErr)
 	err = cx.SetRect(ctx, newRect)
 	assert.Error(t, err)
 	assert.Equal(t, err, cmdErr)
 
 	// returns error (invalid response)
-	cli.EXPECT().Post(ctx, "/session/123/window/rect", gomock.Any()).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/rect", gomock.Any()).Times(1).Return(
 		&Response{Value: []byte(`{}`)}, nil)
 	err = cx.SetRect(ctx, newRect)
 	assert.Error(t, err)
@@ -267,15 +268,15 @@ func TestSessionContext_SwitchToFrame(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
 	frameID := FrameHandle("34")
-	cli.EXPECT().Post(ctx, "/session/123/frame", gomock.Any()).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/frame", gomock.Any()).Times(1).Return(
 		&Response{
 			Value: []byte(`null`),
-		}, nil).Do(func(_ context.Context, path string, p params) {
+		}, nil).Do(func(_ context.Context, method string, path string, p Params) {
 		assert.Equal(t, p["id"], frameID)
 	})
 	err := cx.SwitchToFrame(ctx, frameID)
@@ -286,12 +287,12 @@ func TestSessionContext_SwitchToFrame(t *testing.T) {
 		Code:    "code",
 		Message: "msg",
 	}
-	cli.EXPECT().Post(ctx, "/session/123/frame", gomock.Any()).Times(1).Return(nil, cmdErr)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/frame", gomock.Any()).Times(1).Return(nil, cmdErr)
 	err = cx.SwitchToFrame(ctx, frameID)
 	assert.Equal(t, err, cmdErr)
 
 	// returns error (invalid response)
-	cli.EXPECT().Post(ctx, "/session/123/frame", gomock.Any()).Times(1).Return(&Response{Value: []byte(`{}`)}, nil)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/frame", gomock.Any()).Times(1).Return(&Response{Value: []byte(`{}`)}, nil)
 	err = cx.SwitchToFrame(ctx, frameID)
 	assert.Equal(t, err, ErrInvalidResponse)
 }
@@ -300,14 +301,14 @@ func TestSessionContext_SwitchToParentFrame(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
-	cli.EXPECT().Post(ctx, "/session/123/frame/parent", nil).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/frame/parent", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`null`),
-		}, nil).Do(func(_ context.Context, path string, p params) {
+		}, nil).Do(func(_ context.Context, method string, path string, p Params) {
 		assert.Nil(t, p)
 	})
 	err := cx.SwitchToParentFrame(ctx)
@@ -318,15 +319,15 @@ func TestSessionContext_SwitchToParentFrame(t *testing.T) {
 		Code:    "code",
 		Message: "msg",
 	}
-	cli.EXPECT().Post(ctx, "/session/123/frame/parent", nil).Times(1).Return(nil, cmdErr)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/frame/parent", nil).Times(1).Return(nil, cmdErr)
 	err = cx.SwitchToParentFrame(ctx)
 	assert.Equal(t, err, cmdErr)
 
 	// returns error (invalid response)
-	cli.EXPECT().Post(ctx, "/session/123/frame/parent", nil).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/frame/parent", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`{}`),
-		}, nil).Do(func(_ context.Context, path string, p params) {
+		}, nil).Do(func(_ context.Context, method string, path string, p Params) {
 		assert.Nil(t, p)
 	})
 	err = cx.SwitchToParentFrame(ctx)
@@ -337,12 +338,12 @@ func TestSessionContext_GetWindowHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
 	botWindowHandle := WindowHandle("CDwindow-1BCAB31FFE62561727B38152C27A7B88")
-	cli.EXPECT().Get(ctx, "/session/123/window").Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window", nil).Times(1).Return(
 		&Response{
 			Value: []byte(botWindowHandle),
 		}, nil)
@@ -355,7 +356,7 @@ func TestSessionContext_GetWindowHandle(t *testing.T) {
 		Code:    "code",
 		Message: "msg",
 	}
-	cli.EXPECT().Get(ctx, "/session/123/window").Times(1).Return(nil, cmdErr)
+	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window", nil).Times(1).Return(nil, cmdErr)
 	handle, err = cx.GetWindowHandle(ctx)
 	assert.Empty(t, handle)
 	assert.Error(t, err)
@@ -365,7 +366,7 @@ func TestSessionContext_GetWindowHandles(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
@@ -375,7 +376,7 @@ func TestSessionContext_GetWindowHandles(t *testing.T) {
 	}
 	value, err := json.Marshal(botWindowHandles)
 	assert.Nil(t, err)
-	cli.EXPECT().Get(ctx, "/session/123/window/handles").Times(1).Return(&Response{
+	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window/handles", nil).Times(1).Return(&Response{
 		Value: value,
 	}, nil)
 	handles, err := cx.GetWindowHandles(ctx)
@@ -383,7 +384,7 @@ func TestSessionContext_GetWindowHandles(t *testing.T) {
 	assert.ElementsMatch(t, botWindowHandles, handles)
 
 	// returns success (empty list)
-	cli.EXPECT().Get(ctx, "/session/123/window/handles").Times(1).Return(&Response{
+	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window/handles", nil).Times(1).Return(&Response{
 		Value: []byte(`[]`),
 	}, nil)
 	handles, err = cx.GetWindowHandles(ctx)
@@ -395,13 +396,13 @@ func TestSessionContext_GetWindowHandles(t *testing.T) {
 		Code:    "code",
 		Message: "msg",
 	}
-	cli.EXPECT().Get(ctx, "/session/123/window/handles").Times(1).Return(nil, cmdErr)
+	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window/handles", nil).Times(1).Return(nil, cmdErr)
 	handles, err = cx.GetWindowHandles(ctx)
 	assert.Equal(t, err, cmdErr)
 	assert.ElementsMatch(t, handles, []WindowHandle{})
 
 	// returns error (bad JSON format)
-	cli.EXPECT().Get(ctx, "/session/123/window/handles").Times(1).Return(&Response{Value: []byte(`[`)}, nil)
+	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window/handles", nil).Times(1).Return(&Response{Value: []byte(`[`)}, nil)
 	handles, err = cx.GetWindowHandles(ctx)
 	assert.Error(t, err)
 	assert.Empty(t, handles)
@@ -411,7 +412,7 @@ func TestSessionContext_NewWindow(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
@@ -421,7 +422,7 @@ func TestSessionContext_NewWindow(t *testing.T) {
 	}
 	value, err := json.Marshal(botWindow)
 	assert.Nil(t, err)
-	cli.EXPECT().Post(ctx, "/session/123/window/new", gomock.Any()).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/new", gomock.Any()).Times(1).Return(
 		&Response{
 			Value: value,
 		}, nil)
@@ -435,13 +436,13 @@ func TestSessionContext_NewWindow(t *testing.T) {
 		Code:    "code",
 		Message: "msg",
 	}
-	cli.EXPECT().Post(ctx, "/session/123/window/new", gomock.Any()).Times(1).Return(nil, cmdErr)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/new", gomock.Any()).Times(1).Return(nil, cmdErr)
 	win, err = cx.NewWindow(ctx)
 	assert.Equal(t, err, cmdErr)
 	assert.Equal(t, win.Handle, Window{}.Handle)
 
 	// returns error (invalid response)
-	cli.EXPECT().Post(ctx, "/session/123/window/new", gomock.Any()).Times(1).Return(&Response{Value: []byte(`{`)}, nil)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/new", gomock.Any()).Times(1).Return(&Response{Value: []byte(`{`)}, nil)
 	win, err = cx.NewWindow(ctx)
 	assert.Error(t, err)
 	assert.Equal(t, win.Handle, Window{}.Handle)
@@ -451,13 +452,13 @@ func TestSessionContext_SwitchToWindow(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	ctx := context.Background()
-	cli := NewMockClient(ctrl)
+	cli := NewMockDoer(ctrl)
 	cx := NewContext(cli, "123")
 
 	// returns success
 	botWindowHandle := WindowHandle("CDwindow-5B07A00849E4B4DB05A83B074747A172")
-	cli.EXPECT().Post(ctx, "/session/123/window", gomock.Any()).Times(1).Return(
-		&Response{Value: []byte(`null`)}, nil).Do(func(_ context.Context, path string, p params) {
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window", gomock.Any()).Times(1).Return(
+		&Response{Value: []byte(`null`)}, nil).Do(func(_ context.Context, method string, path string, p Params) {
 		assert.Equal(t, p["name"], botWindowHandle)
 	})
 	err := cx.SwitchToWindow(ctx, botWindowHandle)
@@ -468,12 +469,12 @@ func TestSessionContext_SwitchToWindow(t *testing.T) {
 		Code:    "code",
 		Message: "msg",
 	}
-	cli.EXPECT().Post(ctx, "/session/123/window", gomock.Any()).Times(1).Return(nil, cmdErr)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window", gomock.Any()).Times(1).Return(nil, cmdErr)
 	err = cx.SwitchToWindow(ctx, botWindowHandle)
 	assert.Equal(t, err, cmdErr)
 
 	// returns error (bad JSON format)
-	cli.EXPECT().Post(ctx, "/session/123/window", gomock.Any()).Times(1).Return(
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window", gomock.Any()).Times(1).Return(
 		&Response{Value: []byte(`{}`)}, nil)
 	err = cx.SwitchToWindow(ctx, botWindowHandle)
 	assert.Equal(t, err, ErrInvalidResponse)
