@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"testing"
 
@@ -11,14 +10,27 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
-func TestTimeouts_GetTimeouts(t *testing.T) {
+var timeoutsErr = &Error{
+	Code:    "code",
+	Message: "msg",
+}
+
+func newTimeouts(t *testing.T, sessID string) (Timeouts, *MockDoer, func()) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	ctx := context.Background()
 	cli := NewMockDoer(ctrl)
-	timeouts := NewTimeouts(cli, "123")
+	cx := NewTimeouts(cli, "123")
+	return cx, cli, func() {
+		ctrl.Finish()
+	}
+}
 
+func TestTimeouts_GetTimeouts(t *testing.T) {
+	timeouts, cli, done := newTimeouts(t, "123")
+	defer done()
+
+	ctx := context.TODO()
+
+	// returns success
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/timeouts", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`{"pageLoad": 10000, "script": 10000, "Implicit": 10000}`),
@@ -30,46 +42,48 @@ func TestTimeouts_GetTimeouts(t *testing.T) {
 	assert.Equal(t, ti.Script, DefaultTimeoutMs)
 	assert.Equal(t, ti.PageLoad, DefaultTimeoutMs)
 
+	// returns error
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/timeouts", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`{"pageLoad": 10000, "script": 10000, "Implicit": 10000}`),
-		}, errors.New("some error"))
+		}, timeoutsErr)
 	_, err = timeouts.GetTimeouts(ctx)
 	assert.Error(t, err)
 
+	// returns error (bad JSON format)
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/timeouts", nil).Times(1).Return(
 		&Response{
-			Value: []byte(`{"pageLoad: 10000, "script": 10000, "Implicit": 10000}`),
+			Value: []byte(`{`),
 		}, nil)
 	_, err = timeouts.GetTimeouts(ctx)
 	assert.Error(t, err)
 }
 
 func TestTimeouts_SetTimeouts(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	timeouts, cli, done := newTimeouts(t, "123")
+	defer done()
 
-	ctx := context.Background()
-	cli := NewMockDoer(ctrl)
-	timeouts := NewTimeouts(cli, "123")
+	ctx := context.TODO()
 
+	// returns success
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/timeouts", gomock.Any()).Times(1).Return(
 		&Response{
 			Value: []byte(`null`),
 		}, nil).Do(func(_ context.Context, method string, p string, params map[string]interface{}) {
 		assert.Equal(t, params[string(PageLoadTimeout)], DefaultTimeoutMs)
 	})
-
 	err := timeouts.SetTimeouts(ctx, PageLoadTimeout, DefaultTimeoutMs)
 	assert.Nil(t, err)
 
+	// returns error (validation)
 	err = timeouts.SetTimeouts(ctx, Timeout("unknown"), DefaultTimeoutMs)
 	assert.Equal(t, err, ErrTimeoutConfiguration)
 
+	// returns error
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/timeouts", gomock.Any()).Times(1).Return(
 		&Response{
 			Value: []byte(`{}`),
-		}, errors.New("some error"))
+		}, timeoutsErr)
 
 	err = timeouts.SetTimeouts(ctx, PageLoadTimeout, DefaultTimeoutMs)
 	assert.Error(t, err)

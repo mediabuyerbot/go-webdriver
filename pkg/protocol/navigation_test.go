@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"testing"
 
@@ -10,16 +9,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNavigation_NavigateTo(t *testing.T) {
+var navigationErr = &Error{
+	Code:    "code",
+	Message: "msg",
+}
+
+func newNavigation(t *testing.T, sessID string) (Navigation, *MockDoer, func()) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	ctx := context.Background()
 	cli := NewMockDoer(ctrl)
+	n := NewNavigation(cli, "123")
+	return n, cli, func() {
+		ctrl.Finish()
+	}
+}
 
-	navigation := NewNavigation(cli, "123")
+func TestNavigation_NavigateTo(t *testing.T) {
+	navigation, cli, done := newNavigation(t, "123")
+	defer done()
+
+	ctx := context.TODO()
+
+	// returns success
 	botURL := "https://mediabuyerbot.com"
-	someErr := errors.New("some error")
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/url", gomock.Any()).Times(1).Return(
 		&Response{
 			SessionID: "123",
@@ -27,35 +38,35 @@ func TestNavigation_NavigateTo(t *testing.T) {
 		}, nil).Do(func(_ context.Context, method string, p string, params map[string]interface{}) {
 		assert.Equal(t, params["url"], botURL)
 	})
-
 	err := navigation.NavigateTo(ctx, botURL)
 	assert.Nil(t, err)
 
+	// returns error
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/url", gomock.Any()).Times(1).Return(
 		&Response{
 			SessionID: "123",
 			Value:     []byte(`null`),
-		}, someErr)
+		}, navigationErr)
 	err = navigation.NavigateTo(ctx, botURL)
-	assert.Equal(t, err, someErr)
+	assert.Equal(t, err, navigationErr)
 
+	// returns error (invalid response)
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/url", gomock.Any()).Times(1).Return(
 		&Response{
 			SessionID: "123",
-			Value:     []byte(``),
+			Value:     []byte(`{}`),
 		}, nil)
 	err = navigation.NavigateTo(ctx, botURL)
 	assert.Equal(t, err, ErrInvalidResponse)
 }
 
 func TestNavigation_GetCurrentURL(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	navigation, cli, done := newNavigation(t, "123")
+	defer done()
 
-	ctx := context.Background()
-	cli := NewMockDoer(ctrl)
+	ctx := context.TODO()
 
-	navigation := NewNavigation(cli, "123")
+	// returns success
 	botURL := "https://mediabuyerbot.com"
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/url", nil).Times(1).Return(
 		&Response{
@@ -67,6 +78,7 @@ func TestNavigation_GetCurrentURL(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, curURL, botURL)
 
+	// returns errors (invalid response)
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/url", nil).Times(1).Return(
 		nil, ErrInvalidResponse)
 	curURL, err = navigation.GetCurrentURL(ctx)
@@ -75,14 +87,12 @@ func TestNavigation_GetCurrentURL(t *testing.T) {
 }
 
 func TestNavigation_Back(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	navigation, cli, done := newNavigation(t, "123")
+	defer done()
 
-	ctx := context.Background()
-	cli := NewMockDoer(ctrl)
+	ctx := context.TODO()
 
-	navigation := NewNavigation(cli, "123")
-
+	// returns success
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/back", gomock.Any()).Times(1).Return(
 		&Response{
 			SessionID: "123",
@@ -94,11 +104,12 @@ func TestNavigation_Back(t *testing.T) {
 	err := navigation.Back(ctx)
 	assert.Nil(t, err)
 
-	someErr := errors.New("some error")
-	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/back", gomock.Any()).Times(1).Return(nil, someErr)
+	// returns error
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/back", gomock.Any()).Times(1).Return(nil, navigationErr)
 	err = navigation.Back(ctx)
-	assert.Equal(t, err, someErr)
+	assert.Equal(t, err, navigationErr)
 
+	// returns error (invalid response)
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/back", gomock.Any()).Times(1).Return(
 		&Response{
 			SessionID: "123",
@@ -112,14 +123,12 @@ func TestNavigation_Back(t *testing.T) {
 }
 
 func TestNavigation_Forward(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	navigation, cli, done := newNavigation(t, "123")
+	defer done()
 
-	ctx := context.Background()
-	cli := NewMockDoer(ctrl)
+	ctx := context.TODO()
 
-	navigation := NewNavigation(cli, "123")
-
+	// returns success
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/forward", gomock.Any()).Times(1).Return(
 		&Response{
 			SessionID: "123",
@@ -131,11 +140,12 @@ func TestNavigation_Forward(t *testing.T) {
 	err := navigation.Forward(ctx)
 	assert.Nil(t, err)
 
-	someErr := errors.New("some error")
-	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/forward", gomock.Any()).Times(1).Return(nil, someErr)
+	// returns error
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/forward", gomock.Any()).Times(1).Return(nil, navigationErr)
 	err = navigation.Forward(ctx)
-	assert.Equal(t, err, someErr)
+	assert.Equal(t, err, navigationErr)
 
+	// returns error (invalid response)
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/forward", gomock.Any()).Times(1).Return(
 		&Response{
 			SessionID: "123",
@@ -149,14 +159,12 @@ func TestNavigation_Forward(t *testing.T) {
 }
 
 func TestNavigation_Refresh(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	navigation, cli, done := newNavigation(t, "123")
+	defer done()
 
-	ctx := context.Background()
-	cli := NewMockDoer(ctrl)
+	ctx := context.TODO()
 
-	navigation := NewNavigation(cli, "123")
-
+	// returns success
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/refresh", gomock.Any()).Times(1).Return(
 		&Response{
 			SessionID: "123",
@@ -168,11 +176,12 @@ func TestNavigation_Refresh(t *testing.T) {
 	err := navigation.Refresh(ctx)
 	assert.Nil(t, err)
 
-	someErr := errors.New("some error")
-	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/refresh", gomock.Any()).Times(1).Return(nil, someErr)
+	// returns error
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/refresh", gomock.Any()).Times(1).Return(nil, navigationErr)
 	err = navigation.Refresh(ctx)
-	assert.Equal(t, err, someErr)
+	assert.Equal(t, err, navigationErr)
 
+	// returns error (invalid response)
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/refresh", gomock.Any()).Times(1).Return(
 		&Response{
 			SessionID: "123",
@@ -186,22 +195,22 @@ func TestNavigation_Refresh(t *testing.T) {
 }
 
 func TestNavigation_GetTitle(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	navigation, cli, done := newNavigation(t, "123")
+	defer done()
 
-	ctx := context.Background()
-	cli := NewMockDoer(ctrl)
+	ctx := context.TODO()
 
-	botTitle := "MediaBuyerBot"
-	navigation := NewNavigation(cli, "123")
+	// returns success
+	wantTitle := "MediaBuyerBot"
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/title", nil).Times(1).Return(
-		&Response{Value: []byte(botTitle)}, nil)
-	title, err := navigation.GetTitle(ctx)
+		&Response{Value: []byte(wantTitle)}, nil)
+	haveTitle, err := navigation.GetTitle(ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, title, botTitle)
+	assert.Equal(t, haveTitle, wantTitle)
 
+	// returns error
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/title", nil).Times(1).Return(nil, ErrInvalidResponse)
-	title, err = navigation.GetTitle(ctx)
+	haveTitle, err = navigation.GetTitle(ctx)
 	assert.Equal(t, err, ErrInvalidResponse)
-	assert.Empty(t, title)
+	assert.Empty(t, haveTitle)
 }
