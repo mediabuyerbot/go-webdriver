@@ -16,6 +16,8 @@
   + [Timeouts](#timeouts)
   + [Navigation](#navigation)
   + [Context](#context)
+  + [Cookies](#cookies)
+  + [Document](#document)
 
 ### Installation
 ```ssh
@@ -88,3 +90,20 @@ make mocks
 | [Maximize Window](https://w3c.github.io/webdriver/#maximize-window)            |               |  &#10003;     | &#10003; |
 | [Minimize Window](https://w3c.github.io/webdriver/#minimize-window)            |               |  &#10003;     | &#10003; |
 | [Fullscreen Window](https://w3c.github.io/webdriver/#fullscreen-window)        |               |  &#10003;     | &#10003; |
+
+### Cookies
+| Specification                                                                  | Example       | Chrome        | Firefox  |
+| -----------------------------------------------------------------------------  | ------------- | :------------:| :-------:|
+| [Get All Cookies](https://w3c.github.io/webdriver/#get-all-cookies)            |               |  &#10003;     | &#10003; |
+| [Get Named Cookie](https://w3c.github.io/webdriver/#get-named-cookie)          |               |  &#10003;     | &#10003; |
+| [Add Cookie](https://w3c.github.io/webdriver/#add-cookie)                      |               |  &#10003;     | &#10003; |
+| [Delete Cookie](https://w3c.github.io/webdriver/#delete-cookie)                |               |  &#10003;     | &#10003; |
+| [Delete All Cookies](https://w3c.github.io/webdriver/#delete-all-cookies)      |               |  &#10003;     | &#10003; |
+
+
+### Document
+| Specification                                                                  | Example       | Chrome        | Firefox  |
+| -----------------------------------------------------------------------------  | ------------- | :------------:| :-------:|
+| [Get Page Source](https://w3c.github.io/webdriver/#get-page-source)            |               |  &#10003;     | &#10003; |
+| [Execute Script](https://w3c.github.io/webdriver/#execute-script)              |               |  &#10003;     | &#10003; |
+| [Execute Async Script](https://w3c.github.io/webdriver/#execute-async-script)  |               |  &#10003;     | &#10003; |
