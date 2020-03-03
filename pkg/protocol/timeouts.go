@@ -3,65 +3,58 @@ package protocol
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
+	"time"
 )
-
-const (
-	// ImplicitTimeout  gives the timeout of when to abort locating an element.
-	ImplicitTimeout Timeout = "implicit"
-
-	// PageLoadTimeout provides the timeout limit used to interrupt navigation of the browsing context.
-	PageLoadTimeout Timeout = "pageLoad"
-
-	// ScriptTimeout determines when to interrupt a script that is being evaluated.
-	ScriptTimeout Timeout = "script"
-
-	DefaultTimeoutMs = Ms(10000)
-)
-
-// ErrTimeoutConfiguration returns when an invalid timeout type is specified.
-var ErrTimeoutConfiguration = errors.New("protocol: timeouts configuration")
 
 // Timeouts represents  a timeouts that control
 // the behavior of script evaluation, navigation, and element retrieval.
 type Timeouts interface {
 
-	// GetTimeouts returns the timeouts implicit, pageLoad, script.
-	GetTimeouts(context.Context) (TimeoutInfo, error)
+	// Get returns the timeouts implicit, pageLoad, script.
+	Get(context.Context) (Timeout, error)
 
-	// SetTimeouts configure the amount of time that a particular type of operation can execute for before
-	// they are aborted and a |Timeout| error is returned to the client.  Valid values are: "script" for script timeouts,
-	// "implicit" for modifying the implicit wait timeout and "pageLoad" for setting a page load timeout.
-	SetTimeouts(context.Context, Timeout, Ms) error
+	// SetImplicit sets the amount of time the driver should wait when
+	// searching for elements. The timeout will be rounded to nearest millisecond.
+	SetImplicit(context.Context, time.Duration) error
 
-	// SetImplicitTimeout set the session implicit wait timeout.
-	SetImplicitTimeout(context.Context, Ms) error
+	// SetPageLoad sets the amount of time the driver should wait when
+	// loading a page. The timeout will be rounded to nearest millisecond.
+	SetPageLoad(context.Context, time.Duration) error
 
-	// SetPageLoadTimeout set the session page load timeout.
-	SetPageLoadTimeout(context.Context, Ms) error
-
-	// SetScriptTimeout set the session script timeout.
-	SetScriptTimeout(context.Context, Ms) error
+	// SetScript sets the amount of time that asynchronous scripts
+	// are permitted to run before they are aborted. The timeout will be rounded
+	// to nearest millisecond.
+	SetScript(context.Context, time.Duration) error
 }
 
-type (
-	Timeout     string
-	Ms          int
-	TimeoutInfo struct {
-		Implicit Ms `json:"implicit"`
-		PageLoad Ms `json:"pageLoad"`
-		Script   Ms `json:"script"`
-	}
+const (
+	implicitTimeout = "implicit"
+	pageLoadTimeout = "pageLoad"
+	scriptTimeout   = "script"
 )
+
+type Timeout struct {
+	Implicit uint `json:"implicit"`
+	PageLoad uint `json:"pageLoad"`
+	Script   uint `json:"script"`
+}
+
+func (t Timeout) GetImplicit() time.Duration {
+	return time.Duration(t.Implicit) * time.Millisecond
+}
+
+func (t Timeout) GetPageLoad() time.Duration {
+	return time.Duration(t.PageLoad) * time.Millisecond
+}
+
+func (t Timeout) GetScript() time.Duration {
+	return time.Duration(t.Script) * time.Millisecond
+}
 
 type timeouts struct {
 	id      string
 	request Doer
-}
-
-func (t Timeout) String() string {
-	return string(t)
 }
 
 // NewTimeouts creates a new instance of Timeouts.
@@ -72,17 +65,7 @@ func NewTimeouts(doer Doer, sessionID string) Timeouts {
 	}
 }
 
-func (t *timeouts) validate(tm Timeout) bool {
-	switch tm {
-	case ImplicitTimeout, PageLoadTimeout, ScriptTimeout:
-		return true
-	default:
-		return false
-	}
-}
-
-// GetTimeouts returns the timeouts implicit, pageLoad, script.
-func (t *timeouts) GetTimeouts(ctx context.Context) (info TimeoutInfo, err error) {
+func (t *timeouts) Get(ctx context.Context) (info Timeout, err error) {
 	resp, err := t.request.Do(ctx, http.MethodGet, "/session/"+t.id+"/timeouts", nil)
 	if err != nil {
 		return info, err
@@ -93,14 +76,20 @@ func (t *timeouts) GetTimeouts(ctx context.Context) (info TimeoutInfo, err error
 	return info, nil
 }
 
-// SetTimeouts configure the amount of time that a particular type of operation can execute for before
-// they are aborted and a |Timeout| error is returned to the client.  Valid values are: "script" for script timeouts,
-// "implicit" for modifying the implicit wait timeout and "pageLoad" for setting a page load timeout.
-func (t *timeouts) SetTimeouts(ctx context.Context, tm Timeout, ms Ms) error {
-	if ok := t.validate(tm); !ok {
-		return ErrTimeoutConfiguration
-	}
-	p := Params{tm.String(): ms}
+func (t *timeouts) SetImplicit(ctx context.Context, d time.Duration) error {
+	return t.set(ctx, implicitTimeout, d)
+}
+
+func (t *timeouts) SetPageLoad(ctx context.Context, d time.Duration) error {
+	return t.set(ctx, pageLoadTimeout, d)
+}
+
+func (t *timeouts) SetScript(ctx context.Context, d time.Duration) error {
+	return t.set(ctx, scriptTimeout, d)
+}
+
+func (t *timeouts) set(ctx context.Context, tm string, d time.Duration) error {
+	p := Params{tm: d.Milliseconds()}
 	resp, err := t.request.Do(ctx, http.MethodPost, "/session/"+t.id+"/timeouts", p)
 	if err != nil {
 		return err
@@ -109,19 +98,4 @@ func (t *timeouts) SetTimeouts(ctx context.Context, tm Timeout, ms Ms) error {
 		return nil
 	}
 	return ErrInvalidResponse
-}
-
-// SetImplicitTimeout set the session implicit wait timeout.
-func (t *timeouts) SetImplicitTimeout(ctx context.Context, ms Ms) error {
-	return t.SetTimeouts(ctx, ImplicitTimeout, ms)
-}
-
-// SetPageLoadTimeout set the session page load timeout.
-func (t *timeouts) SetPageLoadTimeout(ctx context.Context, ms Ms) error {
-	return t.SetTimeouts(ctx, PageLoadTimeout, ms)
-}
-
-// SetScriptTimeout set the session script timeout.
-func (t *timeouts) SetScriptTimeout(ctx context.Context, ms Ms) error {
-	return t.SetTimeouts(ctx, ScriptTimeout, ms)
 }

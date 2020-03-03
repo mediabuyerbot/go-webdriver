@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -24,30 +25,44 @@ func newTimeouts(t *testing.T, sessID string) (Timeouts, *MockDoer, func()) {
 	}
 }
 
+func TestTimeouts_Timeout(t *testing.T) {
+	t1 := Timeout{
+		Script:   1000,
+		PageLoad: 1000,
+		Implicit: 1000,
+	}
+	onesec := float64(1)
+	assert.Equal(t, t1.GetScript().Seconds(), onesec)
+	assert.Equal(t, t1.GetImplicit().Seconds(), onesec)
+	assert.Equal(t, t1.GetPageLoad().Seconds(), onesec)
+}
+
 func TestTimeouts_GetTimeouts(t *testing.T) {
 	timeouts, cli, done := newTimeouts(t, "123")
 	defer done()
 
 	ctx := context.TODO()
+	wantTimeout := time.Second
 
 	// returns success
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/timeouts", nil).Times(1).Return(
 		&Response{
-			Value: []byte(`{"pageLoad": 10000, "script": 10000, "Implicit": 10000}`),
+			Value: []byte(`{"pageLoad": 1000, "script": 1000, "Implicit": 1000}`),
 		}, nil)
 
-	ti, err := timeouts.GetTimeouts(ctx)
+	ti, err := timeouts.Get(ctx)
+
 	assert.Nil(t, err)
-	assert.Equal(t, ti.Implicit, DefaultTimeoutMs)
-	assert.Equal(t, ti.Script, DefaultTimeoutMs)
-	assert.Equal(t, ti.PageLoad, DefaultTimeoutMs)
+	assert.Equal(t, ti.GetImplicit().Milliseconds(), wantTimeout.Milliseconds())
+	assert.Equal(t, ti.GetScript().Milliseconds(), wantTimeout.Milliseconds())
+	assert.Equal(t, ti.GetPageLoad().Milliseconds(), wantTimeout.Milliseconds())
 
 	// returns error
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/timeouts", nil).Times(1).Return(
 		&Response{
-			Value: []byte(`{"pageLoad": 10000, "script": 10000, "Implicit": 10000}`),
+			Value: []byte(`{"pageLoad": 1000, "script": 1000, "Implicit": 1000}`),
 		}, timeoutsErr)
-	_, err = timeouts.GetTimeouts(ctx)
+	_, err = timeouts.Get(ctx)
 	assert.Error(t, err)
 
 	// returns error (bad JSON format)
@@ -55,7 +70,7 @@ func TestTimeouts_GetTimeouts(t *testing.T) {
 		&Response{
 			Value: []byte(`{`),
 		}, nil)
-	_, err = timeouts.GetTimeouts(ctx)
+	_, err = timeouts.Get(ctx)
 	assert.Error(t, err)
 }
 
@@ -64,57 +79,37 @@ func TestTimeouts_SetTimeouts(t *testing.T) {
 	defer done()
 
 	ctx := context.TODO()
+	wantTimeout := time.Second
 
-	// returns success
+	// returns success (pageLoad)
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/timeouts", gomock.Any()).Times(1).Return(
 		&Response{
 			Value: []byte(`null`),
 		}, nil).Do(func(_ context.Context, method string, p string, params map[string]interface{}) {
-		assert.Equal(t, params[string(PageLoadTimeout)], DefaultTimeoutMs)
+		assert.Equal(t, params[pageLoadTimeout], wantTimeout.Milliseconds())
 	})
-	err := timeouts.SetTimeouts(ctx, PageLoadTimeout, DefaultTimeoutMs)
+	err := timeouts.SetPageLoad(ctx, wantTimeout)
 	assert.Nil(t, err)
 
-	// returns error (validation)
-	err = timeouts.SetTimeouts(ctx, Timeout("unknown"), DefaultTimeoutMs)
-	assert.Equal(t, err, ErrTimeoutConfiguration)
+	// returns success (script)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/timeouts", gomock.Any()).Times(1).Return(
+		&Response{
+			Value: []byte(`null`),
+		}, nil).Do(func(_ context.Context, method string, p string, params map[string]interface{}) {
+		assert.Equal(t, params[implicitTimeout], wantTimeout.Milliseconds())
+	})
+	err = timeouts.SetImplicit(ctx, wantTimeout)
+	assert.Nil(t, err)
+
+	// returns success (implicit)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/timeouts", gomock.Any()).Times(1).Return(
+		&Response{
+			Value: []byte(`null`),
+		}, nil).Do(func(_ context.Context, method string, p string, params map[string]interface{}) {
+		assert.Equal(t, params[scriptTimeout], wantTimeout.Milliseconds())
+	})
+	err = timeouts.SetScript(ctx, wantTimeout)
+	assert.Nil(t, err)
 
 	// returns error
-	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/timeouts", gomock.Any()).Times(1).Return(
-		&Response{
-			Value: []byte(`{}`),
-		}, timeoutsErr)
-
-	err = timeouts.SetTimeouts(ctx, PageLoadTimeout, DefaultTimeoutMs)
-	assert.Error(t, err)
-
-	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/timeouts", gomock.Any()).Times(1).Return(
-		&Response{
-			Value: []byte(`null`),
-		}, nil).Do(func(_ context.Context, method string, p string, params map[string]interface{}) {
-		assert.Equal(t, params[string(ImplicitTimeout)], DefaultTimeoutMs)
-	})
-
-	err = timeouts.SetImplicitTimeout(ctx, DefaultTimeoutMs)
-	assert.Nil(t, err)
-
-	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/timeouts", gomock.Any()).Times(1).Return(
-		&Response{
-			Value: []byte(`null`),
-		}, nil).Do(func(_ context.Context, method string, p string, params map[string]interface{}) {
-		assert.Equal(t, params[string(PageLoadTimeout)], DefaultTimeoutMs)
-	})
-
-	err = timeouts.SetPageLoadTimeout(ctx, DefaultTimeoutMs)
-	assert.Nil(t, err)
-
-	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/timeouts", gomock.Any()).Times(1).Return(
-		&Response{
-			Value: []byte(`null`),
-		}, nil).Do(func(_ context.Context, method string, p string, params map[string]interface{}) {
-		assert.Equal(t, params[string(ScriptTimeout)], DefaultTimeoutMs)
-	})
-
-	err = timeouts.SetScriptTimeout(ctx, DefaultTimeoutMs)
-	assert.Nil(t, err)
 }

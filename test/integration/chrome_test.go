@@ -23,8 +23,8 @@ func chromeBrowser(t *testing.T) (webdriver.Session, func()) {
 			"platform": "linux",
 			"chromeOptions": map[string][]string{
 				"args": []string{
-					"--headless",
-					"--disable-gpu",
+					// "--headless",
+					// "--disable-gpu",
 					"--no-sandbox",
 				},
 			},
@@ -54,6 +54,54 @@ func TestChrome_Sessions(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, status.Ready)
 }
+
+//func TestChrome_Cookies(t *testing.T) {
+//	var cookies []protocol.Cookie
+//	if err := json.Unmarshal([]byte(ccc), &cookies); err != nil {
+//		t.Fatal(err)
+//	}
+//	browser, close := chromeBrowser(t)
+//	defer close()
+//
+//	ctx := context.Background()
+//
+//	if err := browser.Navigation().NavigateTo(ctx, "https://myaccount.google.com"); err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	for _, c := range cookies {
+//		log.Println(">", c)
+//		if err := browser.Cookies().Add(ctx, c); err != nil {
+//			log.Println("err>>>>", err)
+//		}
+//	}
+//
+//	if err := browser.Navigation().NavigateTo(ctx, "https://myaccount.google.com/personal-info"); err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	if err := browser.Navigation().NavigateTo(ctx, "https://mail.google.com"); err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	time.Sleep(1 * time.Second)
+//
+//	w, err := browser.Context().NewWindow(ctx)
+//	log.Println("ERR>>>>>", w, err)
+//
+//	if err := browser.Navigation().NavigateTo(ctx, "https://myaccount.google.com/personal-info"); err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	//if err := browser.Navigation().Refresh(ctx); err != nil {
+//	//	t.Fatal(err)
+//	//}
+//	title, _ := browser.Navigation().GetTitle(ctx)
+//	log.Println("title", title)
+//
+//	time.Sleep(5 * time.Second)
+//
+//}
 
 //func TestChromedriverSessionCapabilities(t *testing.T) {
 //	b, c := newChromeBrowser(t)

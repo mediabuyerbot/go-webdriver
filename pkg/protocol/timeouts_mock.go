@@ -8,6 +8,7 @@ import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+	time "time"
 )
 
 // MockTimeouts is a mock of Timeouts interface
@@ -33,73 +34,59 @@ func (m *MockTimeouts) EXPECT() *MockTimeoutsMockRecorder {
 	return m.recorder
 }
 
-// GetTimeouts mocks base method
-func (m *MockTimeouts) GetTimeouts(arg0 context.Context) (TimeoutInfo, error) {
+// Get mocks base method
+func (m *MockTimeouts) Get(arg0 context.Context) (Timeout, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTimeouts", arg0)
-	ret0, _ := ret[0].(TimeoutInfo)
+	ret := m.ctrl.Call(m, "Get", arg0)
+	ret0, _ := ret[0].(Timeout)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetTimeouts indicates an expected call of GetTimeouts
-func (mr *MockTimeoutsMockRecorder) GetTimeouts(arg0 interface{}) *gomock.Call {
+// Get indicates an expected call of Get
+func (mr *MockTimeoutsMockRecorder) Get(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTimeouts", reflect.TypeOf((*MockTimeouts)(nil).GetTimeouts), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockTimeouts)(nil).Get), arg0)
 }
 
-// SetTimeouts mocks base method
-func (m *MockTimeouts) SetTimeouts(arg0 context.Context, arg1 Timeout, arg2 Ms) error {
+// SetImplicit mocks base method
+func (m *MockTimeouts) SetImplicit(arg0 context.Context, arg1 time.Duration) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetTimeouts", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "SetImplicit", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetTimeouts indicates an expected call of SetTimeouts
-func (mr *MockTimeoutsMockRecorder) SetTimeouts(arg0, arg1, arg2 interface{}) *gomock.Call {
+// SetImplicit indicates an expected call of SetImplicit
+func (mr *MockTimeoutsMockRecorder) SetImplicit(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTimeouts", reflect.TypeOf((*MockTimeouts)(nil).SetTimeouts), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetImplicit", reflect.TypeOf((*MockTimeouts)(nil).SetImplicit), arg0, arg1)
 }
 
-// SetImplicitTimeout mocks base method
-func (m *MockTimeouts) SetImplicitTimeout(arg0 context.Context, arg1 Ms) error {
+// SetPageLoad mocks base method
+func (m *MockTimeouts) SetPageLoad(arg0 context.Context, arg1 time.Duration) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetImplicitTimeout", arg0, arg1)
+	ret := m.ctrl.Call(m, "SetPageLoad", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetImplicitTimeout indicates an expected call of SetImplicitTimeout
-func (mr *MockTimeoutsMockRecorder) SetImplicitTimeout(arg0, arg1 interface{}) *gomock.Call {
+// SetPageLoad indicates an expected call of SetPageLoad
+func (mr *MockTimeoutsMockRecorder) SetPageLoad(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetImplicitTimeout", reflect.TypeOf((*MockTimeouts)(nil).SetImplicitTimeout), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPageLoad", reflect.TypeOf((*MockTimeouts)(nil).SetPageLoad), arg0, arg1)
 }
 
-// SetPageLoadTimeout mocks base method
-func (m *MockTimeouts) SetPageLoadTimeout(arg0 context.Context, arg1 Ms) error {
+// SetScript mocks base method
+func (m *MockTimeouts) SetScript(arg0 context.Context, arg1 time.Duration) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPageLoadTimeout", arg0, arg1)
+	ret := m.ctrl.Call(m, "SetScript", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetPageLoadTimeout indicates an expected call of SetPageLoadTimeout
-func (mr *MockTimeoutsMockRecorder) SetPageLoadTimeout(arg0, arg1 interface{}) *gomock.Call {
+// SetScript indicates an expected call of SetScript
+func (mr *MockTimeoutsMockRecorder) SetScript(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPageLoadTimeout", reflect.TypeOf((*MockTimeouts)(nil).SetPageLoadTimeout), arg0, arg1)
-}
-
-// SetScriptTimeout mocks base method
-func (m *MockTimeouts) SetScriptTimeout(arg0 context.Context, arg1 Ms) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetScriptTimeout", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetScriptTimeout indicates an expected call of SetScriptTimeout
-func (mr *MockTimeoutsMockRecorder) SetScriptTimeout(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetScriptTimeout", reflect.TypeOf((*MockTimeouts)(nil).SetScriptTimeout), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetScript", reflect.TypeOf((*MockTimeouts)(nil).SetScript), arg0, arg1)
 }
