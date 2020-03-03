@@ -1,4 +1,4 @@
-# go-webdriver  [![Coverage Status](https://coveralls.io/repos/github/mediabuyerbot/go-webdriver/badge.svg?branch=master&t1)](https://coveralls.io/github/mediabuyerbot/go-webdriver?branch=master)
+# go-webdriver  [![Coverage Status](https://coveralls.io/repos/github/mediabuyerbot/go-webdriver/badge.svg?branch=master&t3)](https://coveralls.io/github/mediabuyerbot/go-webdriver?branch=master)
 
 ## Work in progress...
 
@@ -107,4 +107,3 @@ make mocks
 | [Get Page Source](https://w3c.github.io/webdriver/#get-page-source)            |               |  &#10003;     | &#10003; |
 | [Execute Script](https://w3c.github.io/webdriver/#execute-script)              |               |  &#10003;     | &#10003; |
 | [Execute Async Script](https://w3c.github.io/webdriver/#execute-async-script)  |               |  &#10003;     | &#10003; |
-
