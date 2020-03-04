@@ -39,6 +39,9 @@ type Session interface {
 	// Document returns a document protocol.
 	Document() protocol.Document
 
+	// ScreenCapture returns a screen capture protocol.
+	ScreenCapture() protocol.ScreenCapture
+
 	// Close close the current session.
 	Close(ctx context.Context) error
 }
@@ -49,12 +52,13 @@ type (
 )
 
 type session struct {
-	session    protocol.Session
-	timeouts   protocol.Timeouts
-	navigation protocol.Navigation
-	context    protocol.Context
-	cookies    protocol.Cookies
-	document   protocol.Document
+	session       protocol.Session
+	timeouts      protocol.Timeouts
+	navigation    protocol.Navigation
+	context       protocol.Context
+	cookies       protocol.Cookies
+	document      protocol.Document
+	screenCapture protocol.ScreenCapture
 }
 
 func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r RequiredCapabilities) (Session, error) {
@@ -65,12 +69,13 @@ func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r Req
 	}
 
 	browser := session{
-		session:    sess,
-		timeouts:   protocol.NewTimeouts(cli, sess.ID()),
-		navigation: protocol.NewNavigation(cli, sess.ID()),
-		context:    protocol.NewContext(cli, sess.ID()),
-		cookies:    protocol.NewCookies(cli, sess.ID()),
-		document:   protocol.NewDocument(cli, sess.ID()),
+		session:       sess,
+		timeouts:      protocol.NewTimeouts(cli, sess.ID()),
+		navigation:    protocol.NewNavigation(cli, sess.ID()),
+		context:       protocol.NewContext(cli, sess.ID()),
+		cookies:       protocol.NewCookies(cli, sess.ID()),
+		document:      protocol.NewDocument(cli, sess.ID()),
+		screenCapture: protocol.NewScreenCapture(cli, sess.ID()),
 	}
 	return &browser, nil
 }
@@ -122,6 +127,11 @@ func (b *session) Cookies() protocol.Cookies {
 // Document returns a document protocol.
 func (b *session) Document() protocol.Document {
 	return b.document
+}
+
+// ScreenCapture returns a screen capture protocol.
+func (b *session) ScreenCapture() protocol.ScreenCapture {
+	return b.screenCapture
 }
 
 // Close close the current session.

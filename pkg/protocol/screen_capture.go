@@ -4,17 +4,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
 type ScreenCapture interface {
 
 	// Take take a screenshot of the current page.
-	Take(ctx context.Context) ([]byte, error)
+	Take(ctx context.Context) (io.Reader, error)
 
 	// TakeElement take a screenshot of the element on the current page.
-	TakeElement(ctx context.Context, elementID string) ([]byte, error)
+	TakeElement(ctx context.Context, elementID string) (io.Reader, error)
 }
 
 type screenCapture struct {
@@ -30,22 +30,26 @@ func NewScreenCapture(doer Doer, sessionID string) ScreenCapture {
 	}
 }
 
-func (s *screenCapture) Take(ctx context.Context) ([]byte, error) {
+func (s *screenCapture) Take(ctx context.Context) (io.Reader, error) {
 	resp, err := s.request.Do(ctx, http.MethodGet, "/session/"+s.id+"/screenshot", nil)
 	if err != nil {
 		return nil, err
 	}
-	buf := bytes.NewBuffer(resp.Value)
-	decoder := base64.NewDecoder(base64.StdEncoding, buf)
-	return ioutil.ReadAll(decoder)
+	if len(resp.Value) == 0 {
+		return nil, ErrInvalidResponse
+	}
+	buf := bytes.NewBuffer(resp.Value[1 : len(resp.Value)-1])
+	return base64.NewDecoder(base64.StdEncoding, buf), nil
 }
 
-func (s *screenCapture) TakeElement(ctx context.Context, elementID string) ([]byte, error) {
+func (s *screenCapture) TakeElement(ctx context.Context, elementID string) (io.Reader, error) {
 	resp, err := s.request.Do(ctx, http.MethodGet, "/session/"+s.id+"/element/"+elementID+"/screenshot", nil)
 	if err != nil {
 		return nil, err
 	}
-	buf := bytes.NewBuffer(resp.Value)
-	decoder := base64.NewDecoder(base64.StdEncoding, buf)
-	return ioutil.ReadAll(decoder)
+	if len(resp.Value) == 0 {
+		return nil, ErrInvalidResponse
+	}
+	buf := bytes.NewBuffer(resp.Value[1 : len(resp.Value)-1])
+	return base64.NewDecoder(base64.StdEncoding, buf), nil
 }
