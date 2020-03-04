@@ -19,7 +19,7 @@ var timeoutsErr = &Error{
 func newTimeouts(t *testing.T, sessID string) (Timeouts, *MockDoer, func()) {
 	ctrl := gomock.NewController(t)
 	cli := NewMockDoer(ctrl)
-	cx := NewTimeouts(cli, "123")
+	cx := NewTimeouts(cli, sessID)
 	return cx, cli, func() {
 		ctrl.Finish()
 	}
@@ -110,6 +110,4 @@ func TestTimeouts_SetTimeouts(t *testing.T) {
 	})
 	err = timeouts.SetScript(ctx, wantTimeout)
 	assert.Nil(t, err)
-
-	// returns error
 }

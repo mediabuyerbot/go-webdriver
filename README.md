@@ -1,4 +1,4 @@
-# go-webdriver  [![Coverage Status](https://coveralls.io/repos/github/mediabuyerbot/go-webdriver/badge.svg?branch=master&t3)](https://coveralls.io/github/mediabuyerbot/go-webdriver?branch=master)
+# go-webdriver  [![Coverage Status](https://coveralls.io/repos/github/mediabuyerbot/go-webdriver/badge.svg?branch=master&t4)](https://coveralls.io/github/mediabuyerbot/go-webdriver?branch=master)
 
 ## Work in progress...
 
@@ -18,6 +18,7 @@
   + [Context](#context)
   + [Cookies](#cookies)
   + [Document](#document)
+  + [Screen capture](#screen-capture)
 
 ### Installation
 ```ssh
@@ -100,10 +101,15 @@ make mocks
 | [Delete Cookie](https://w3c.github.io/webdriver/#delete-cookie)                |               |  &#10003;     | &#10003; |
 | [Delete All Cookies](https://w3c.github.io/webdriver/#delete-all-cookies)      |               |  &#10003;     | &#10003; |
 
-
 ### Document
 | Specification                                                                  | Example       | Chrome        | Firefox  |
 | -----------------------------------------------------------------------------  | ------------- | :------------:| :-------:|
 | [Get Page Source](https://w3c.github.io/webdriver/#get-page-source)            |               |  &#10003;     | &#10003; |
 | [Execute Script](https://w3c.github.io/webdriver/#execute-script)              |               |  &#10003;     | &#10003; |
 | [Execute Async Script](https://w3c.github.io/webdriver/#execute-async-script)  |               |  &#10003;     | &#10003; |
+
+### Screen capture 
+| Specification                                                                  | Example       | Chrome        | Firefox  |
+| -----------------------------------------------------------------------------  | ------------- | :------------:| :-------:|
+| [Take Screenshot](https://w3c.github.io/webdriver/#take-screenshot)            |               |  &#10003;     | &#10003; |
+| [Take Element Screenshot](https://w3c.github.io/webdriver/#take-element-screenshot) |          |  &#10003;     | &#10003; |
