@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mediabuyerbot/go-webdriver/pkg/httpclient"
+	"github.com/mediabuyerbot/httpclient"
 )
 
 type Doer interface {
@@ -31,7 +31,7 @@ type transport struct {
 	Headers http.Header
 }
 
-func NewTransport(client httpclient.Client) Doer {
+func WithClient(client httpclient.Client) Doer {
 	headers := make(http.Header)
 	headers.Add("Content-Type", "application/json;charset=utf-8")
 	headers.Add("Accept", "application/json")

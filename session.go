@@ -5,18 +5,10 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
-	"net/http"
 	"net/url"
-	"time"
 
-	"github.com/mediabuyerbot/go-webdriver/pkg/httpclient"
 	"github.com/mediabuyerbot/go-webdriver/pkg/protocol"
-)
-
-const (
-	DefaultRetryCount = 3
-	DefaultBackOff    = 5
-	DefaultTimeout    = 15 * time.Second
+	"github.com/mediabuyerbot/httpclient"
 )
 
 type (
@@ -35,7 +27,7 @@ type Session struct {
 }
 
 func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r RequiredCapabilities) (*Session, error) {
-	cli := protocol.NewTransport(client)
+	cli := protocol.WithClient(client)
 	sess, err := protocol.NewSession(cli, d, r)
 	if err != nil {
 		return nil, err
@@ -54,13 +46,7 @@ func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r Req
 }
 
 func NewSession(addr string, d DesiredCapabilities, r RequiredCapabilities) (*Session, error) {
-	client, err := httpclient.NewClient(addr,
-		httpclient.WithRetryCount(DefaultRetryCount),
-		httpclient.WithTimeout(DefaultTimeout),
-		httpclient.WithBackOff(func(attemptNum int, resp *http.Response) time.Duration {
-			return DefaultBackOff * time.Second
-		}),
-	)
+	client, err := httpclient.New(httpclient.WithBaseURL(addr))
 	if err != nil {
 		return nil, err
 	}
