@@ -24,6 +24,7 @@ type Session struct {
 	cookies       protocol.Cookies
 	document      protocol.Document
 	screenCapture protocol.ScreenCapture
+	elements      protocol.Elements
 }
 
 func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r RequiredCapabilities) (*Session, error) {
@@ -40,6 +41,7 @@ func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r Req
 		context:       protocol.NewContext(cli, sess.ID()),
 		cookies:       protocol.NewCookies(cli, sess.ID()),
 		document:      protocol.NewDocument(cli, sess.ID()),
+		elements:      protocol.NewElements(cli, sess.ID()),
 		screenCapture: protocol.NewScreenCapture(cli, sess.ID()),
 	}
 	return &browser, nil
@@ -142,6 +144,11 @@ func (b *Session) Document() protocol.Document {
 // ScreenCapture returns a screen capture protocol.
 func (b *Session) ScreenCapture() protocol.ScreenCapture {
 	return b.screenCapture
+}
+
+// Elements returns an elements protocol.
+func (b *Session) Elements() protocol.Elements {
+	return b.elements
 }
 
 // Close close the current session.

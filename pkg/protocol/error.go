@@ -6,7 +6,10 @@ import (
 	"fmt"
 )
 
-var ErrInvalidResponse = errors.New("protocol: invalid response")
+var (
+	ErrInvalidResponse  = errors.New("protocol: invalid response")
+	ErrInvalidArguments = errors.New("protocol: invalid arguments")
+)
 
 // Error represents a WebDriver protocol error.
 type Error struct {
