@@ -2,7 +2,7 @@
 
 ## Work in progress...
 
-## Table of contents
+## Contents
 - [Installation](#installation)
 - [Commands](#commands)
   + [Build dependencies](#build-dependencies)
@@ -19,6 +19,7 @@
   + [Cookies](#cookies)
   + [Document](#document)
   + [Screen capture](#screen-capture)
+  + [User prompts](#user-prompts)
 
 ### Installation
 ```ssh
@@ -113,3 +114,11 @@ make mocks
 | -----------------------------------------------------------------------------  | ------------- | :------------:| :-------:|
 | [Take Screenshot](https://w3c.github.io/webdriver/#take-screenshot)            |               |  &#10003;     | &#10003; |
 | [Take Element Screenshot](https://w3c.github.io/webdriver/#take-element-screenshot) |          |  &#10003;     | &#10003; |
+
+### User prompts
+| Specification                                                                  | Example       | Chrome        | Firefox  |
+| -----------------------------------------------------------------------------  | ------------- | :------------:| :-------:|
+| [Dismiss Alert](https://w3c.github.io/webdriver/#dismiss-alert)                |               |  &#10003;     | &#10003; |
+| [Accept Alert](https://w3c.github.io/webdriver/#accept-alert)                  |               |  &#10003;     | &#10003; |
+| [Get Alert Text](https://w3c.github.io/webdriver/#get-alert-text)              |               |  &#10003;     | &#10003; |
+| [Send Alert Text](https://w3c.github.io/webdriver/#send-alert-text)            |               |  &#10003;     | &#10003; |

@@ -19,7 +19,7 @@ var contextErr = &Error{
 func newContext(t *testing.T, sessID string) (Context, *MockDoer, func()) {
 	ctrl := gomock.NewController(t)
 	cli := NewMockDoer(ctrl)
-	cx := NewContext(cli, "123")
+	cx := NewContext(cli, sessID)
 	return cx, cli, func() {
 		ctrl.Finish()
 	}
