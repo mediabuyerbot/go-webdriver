@@ -7,8 +7,7 @@ import (
 	"net/http"
 )
 
-// ErrUnknownSession returns when a new session is created with empty sessionId.
-var ErrUnknownSession = errors.New("protocol: unknown session")
+var ErrUnknownSession = errors.New("protocol: unknown session id")
 
 // Session represents the connection between a local end and a specific remote end.
 // Session is equivalent to a single instantiation of a particular user agent, including all its child browsers.
@@ -28,13 +27,17 @@ type Session interface {
 	Delete(context.Context) error
 }
 
-type (
-	session struct {
-		id      string
-		request Doer
-		cap     Capabilities
-	}
-)
+type Options interface {
+	Proxy() *Proxy
+	FirstMatch() []O
+	AlwaysMatch() O
+}
+
+type session struct {
+	id      string
+	request Doer
+	cap     Capabilities
+}
 
 type Status struct {
 	// protocol specification
@@ -61,70 +64,59 @@ func (s Status) HasExtensionInfo() bool {
 // NewSession creates a new instance of Session.
 // The new session command creates a new WebDriver session with the endpoint node. If the creation fails,
 // a session not created error is returned.
-func NewSession(doer Doer, desired, required interface{}) (Session, error) {
-	if desired == nil {
-		desired = map[string]interface{}{}
+func NewSession(request Doer, opts Options) (Session, error) {
+	browserOptions := Params{}
+
+	if opts.AlwaysMatch() != nil {
+		browserOptions["alwaysMatch"] = opts.AlwaysMatch()
 	}
-	if required == nil {
-		required = map[string]interface{}{}
+	if len(opts.FirstMatch()) > 0 {
+		browserOptions["firstMatch"] = opts.FirstMatch()
 	}
-	params := Params{
-		"desiredCapabilities":  desired,
-		"requiredCapabilities": required,
+	if opts.Proxy() != nil {
+		browserOptions["proxy"] = opts.Proxy()
 	}
-	resp, err := doer.Do(context.Background(), http.MethodPost, "/session", params)
+	browserConfiguration := Params{
+		"capabilities": browserOptions,
+	}
+	resp, err := request.Do(context.Background(), http.MethodPost, "/session", browserConfiguration)
 	if err != nil {
 		return nil, err
 	}
-	var capabilities Capabilities
-	if err := json.Unmarshal(resp.Value, &capabilities); err != nil {
+
+	var sessResp sessionResponse
+	if err := json.Unmarshal(resp.Value, &sessResp); err != nil {
 		return nil, err
 	}
-	sessID := resp.SessionID
-	// firefox
-	if len(sessID) == 0 {
-		sess, ok := capabilities["sessionId"]
-		if !ok {
-			return nil, ErrUnknownSession
-		}
-		sessID = sess.(string)
-		if len(sessID) == 0 {
-			return nil, ErrUnknownSession
-		}
-		caps, ok := capabilities["capabilities"]
-		if ok {
-			capabilities = copyCap(caps.(map[string]interface{}))
-		}
+	if err := sessResp.Validate(); err != nil {
+		return nil, err
 	}
 	return &session{
-		id:      sessID,
-		cap:     capabilities,
-		request: doer,
+		id:      sessResp.SessionID,
+		cap:     sessResp.Capabilities,
+		request: request,
 	}, nil
 }
 
-// ID returns the unique session id.
 func (s *session) ID() string {
 	return s.id
 }
 
-// Capabilities returns the capabilities of the specified session.
 func (s *session) Capabilities() Capabilities {
 	return s.cap
 }
 
-// Delete delete the session.
 func (s *session) Delete(ctx context.Context) error {
-	_, err := s.request.Do(ctx, http.MethodDelete, "/session/"+s.id, nil)
+	resp, err := s.request.Do(ctx, http.MethodDelete, "/session/"+s.id, nil)
 	if err != nil {
 		return err
 	}
-	return nil
+	if resp.Success() {
+		return nil
+	}
+	return ErrInvalidResponse
 }
 
-// Status returns information about whether a remote end is in a state
-// in which it can create new sessions, but may additionally include arbitrary
-// meta information that is specific to the implementation.
 func (s *session) Status(ctx context.Context) (st Status, err error) {
 	resp, err := s.request.Do(ctx, http.MethodGet, "/status", nil)
 	if err != nil {
@@ -134,4 +126,111 @@ func (s *session) Status(ctx context.Context) (st Status, err error) {
 		return st, err
 	}
 	return st, nil
+}
+
+type O map[string]interface{}
+
+func MakeOptions() O {
+	return make(O)
+}
+
+func (o O) Set(k string, v interface{}) O {
+	o[k] = v
+	return o
+}
+
+func (o O) GetString(key string) (s string) {
+	v, ok := o[key]
+	if !ok {
+		return
+	}
+	s, ok = v.(string)
+	if !ok {
+		return
+	}
+	return s
+}
+
+func (o O) GetBytes(key string) (s []byte) {
+	v, ok := o[key]
+	if !ok {
+		return nil
+	}
+	s, ok = v.([]byte)
+	if !ok {
+		return nil
+	}
+	return s
+}
+
+func (o O) GetStringSlice(key string) (s []string) {
+	v, ok := o[key]
+	if !ok {
+		return nil
+	}
+	s, ok = v.([]string)
+	if !ok {
+		return nil
+	}
+	return s
+}
+
+func (o O) GetOpts(key string) O {
+	v, ok := o[key]
+	if !ok {
+		return nil
+	}
+	t, ok := v.(O)
+	if !ok {
+		return nil
+	}
+	return t
+}
+
+func (o O) GetBool(key string) (b bool) {
+	v, ok := o[key]
+	if !ok {
+		return
+	}
+	b, ok = v.(bool)
+	if !ok {
+		return
+	}
+	return b
+}
+
+func (o O) GetInt(key string) (i int) {
+	v, ok := o[key]
+	if !ok {
+		return
+	}
+	i, ok = v.(int)
+	if !ok {
+		return
+	}
+	return i
+}
+
+func (o O) GetFloat(key string) (f float64) {
+	v, ok := o[key]
+	if !ok {
+		return
+	}
+	f, ok = v.(float64)
+	if !ok {
+		return
+	}
+	return f
+}
+
+type sessionResponse struct {
+	SessionID    string       `json:"sessionId"`
+	Capabilities Capabilities `json:"capabilities"`
+}
+
+func (sr sessionResponse) Validate() error {
+	if len(sr.SessionID) == 0 {
+		return ErrUnknownSession
+	}
+	return nil
 }

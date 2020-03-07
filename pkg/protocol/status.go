@@ -29,18 +29,6 @@ const (
 )
 
 const (
-	CapabilityBrowserName             = "browserName"
-	CapabilityBrowserVersion          = "browserVersion"
-	CapabilityPlatformName            = "platformName"
-	CapabilityAcceptInsecureCerts     = "acceptInsecureCerts"
-	CapabilityPageLoadStrategy        = "pageLoadStrategy"
-	CapabilityProxy                   = "proxy"
-	CapabilitySetWindowRect           = "setWindowRect"
-	CapabilityTimeouts                = "timeouts"
-	CapabilityUnhandledPromptBehavior = "unhandledPromptBehavior"
-)
-
-const (
 	StatusMissingCommandParameters = "400: Missing Command Parameters"
 	StatusUnknownCommand           = "404: Unknown command/Resource Not Found"
 	StatusInvalidCommandMethod     = "405: Invalid Command Method"
@@ -76,33 +64,10 @@ var statusCode = map[int]string{
 	MoveTargetOutOfBoundsStatusCode:      "Target provided for a move action is out of bounds.",
 }
 
-type Capabilities map[string]interface{}
-
-func (c Capabilities) BrowserName() string {
-	v, ok := c[CapabilityBrowserName]
-	if ok {
-		return v.(string)
-	}
-	return ""
-}
-
 func StatusText(sc int) string {
 	msg, ok := statusCode[sc]
 	if !ok {
 		return "Unknown error"
 	}
 	return msg
-}
-
-func copyCap(m map[string]interface{}) Capabilities {
-	cp := make(Capabilities)
-	for k, v := range m {
-		vm, ok := v.(map[string]interface{})
-		if ok {
-			cp[k] = copyCap(vm)
-		} else {
-			cp[k] = v
-		}
-	}
-	return cp
 }

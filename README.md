@@ -11,6 +11,7 @@
   + [Run integration test](#run-integration-test)
   + [Run sync coveralls](#run-sync-coveralls)
   + [Build mocks](#build-mocks) 
+  + [Download ChromeDriver, GeckoDriver](#download-chromedriver-geckodriver-third_partydrivers)
 - [Protocol implementation](#protocol-implementation)  
   + [Session](#session)
   + [Timeouts](#timeouts)
@@ -20,6 +21,7 @@
   + [Document](#document)
   + [Screen capture](#screen-capture)
   + [User prompts](#user-prompts)
+  + [Elements](#elements)
 
 ### Installation
 ```ssh
@@ -51,6 +53,10 @@ make sync-coveralls
 #### Build mocks
 ```shell script
 make mocks
+```
+#### Download ChromeDriver, GeckoDriver third_party/drivers
+```shell script
+make download-drivers
 ```
 
 ## Protocol implementation
@@ -122,3 +128,23 @@ make mocks
 | [Accept Alert](https://w3c.github.io/webdriver/#accept-alert)                  |               |  &#10003;     | &#10003; |
 | [Get Alert Text](https://w3c.github.io/webdriver/#get-alert-text)              |               |  &#10003;     | &#10003; |
 | [Send Alert Text](https://w3c.github.io/webdriver/#send-alert-text)            |               |  &#10003;     | &#10003; |
+
+### Elements
+| Specification                                                                  | Example       | Chrome        | Firefox  |
+| -----------------------------------------------------------------------------  | ------------- | :------------:| :-------:|
+| [Find Element](https://w3c.github.io/webdriver/#find-element)                  |               |  &#10003;     | &#10003; |
+| [Find Elements](https://w3c.github.io/webdriver/#find-elements)                |               |  &#10003;     | &#10003; |
+| [Find Element From Element](https://w3c.github.io/webdriver/#find-element-from-element)              |               |  &#10003;     | &#10003; |
+| [Find Elements From Element](https://w3c.github.io/webdriver/#find-elements-from-element)            |               |  &#10003;     | &#10003; |
+| [Get Active Element](https://w3c.github.io/webdriver/#get-active-element)           |               |  &#10003;     | &#10003; |
+| [Is Element Selected](https://w3c.github.io/webdriver/#is-element-selected)         |               |  &#10003;     | &#10003; |
+| [Get Element Attribute](https://w3c.github.io/webdriver/#get-element-attribute)     |               |  &#10003;     | &#10003; |
+| [Get Element Property](https://w3c.github.io/webdriver/#get-element-property)       |               |  &#10003;     | &#10003; |
+| [Get Element CSS Value](https://w3c.github.io/webdriver/#get-element-css-value)     |               |  &#10003;     | &#10003; |
+| [Get Element Text](https://w3c.github.io/webdriver/#get-element-text)               |               |  &#10003;     | &#10003; |
+| [Get Element Tag Name](https://w3c.github.io/webdriver/#get-element-tag-name)       |               |  &#10003;     | &#10003; |
+| [Get Element Rect](https://w3c.github.io/webdriver/#get-element-rect)               |               |  &#10003;     | &#10003; |
+| [s Element Enabled](https://w3c.github.io/webdriver/#is-element-enabled)            |               |  &#10003;     | &#10003; |
+| [Element Click](https://w3c.github.io/webdriver/#element-click)                     |               |  &#10003;     | &#10003; |
+| [Element Clear](https://w3c.github.io/webdriver/#element-clear)                     |               |  &#10003;     | &#10003; |
+| [Element Send Keys](https://w3c.github.io/webdriver/#element-send-keys)             |               |  &#10003;     | &#10003; |

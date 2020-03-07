@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -48,8 +49,11 @@ func (c *transport) handleResponse(r *http.Response) (resp *Response, err error)
 	if err != nil {
 		return nil, err
 	}
+	if len(buf) == 0 {
+		return nil, fmt.Errorf("protocol: response is empty")
+	}
 	if err := json.Unmarshal(buf, &resp); err != nil {
-		return nil, errors.New(string(buf))
+		return nil, fmt.Errorf("protocol: %v, %s", err, string(buf))
 	}
 	if r.StatusCode >= 400 || resp.Status != 0 {
 		return nil, parseError(r.StatusCode, resp)

@@ -11,11 +11,6 @@ import (
 	"github.com/mediabuyerbot/httpclient"
 )
 
-type (
-	DesiredCapabilities  map[string]interface{}
-	RequiredCapabilities map[string]interface{}
-)
-
 type Session struct {
 	session       protocol.Session
 	timeouts      protocol.Timeouts
@@ -27,9 +22,9 @@ type Session struct {
 	elements      protocol.Elements
 }
 
-func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r RequiredCapabilities) (*Session, error) {
+func NewSessionFromClient(client httpclient.Client, opts protocol.Options) (*Session, error) {
 	cli := protocol.WithClient(client)
-	sess, err := protocol.NewSession(cli, d, r)
+	sess, err := protocol.NewSession(cli, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +42,12 @@ func NewSessionFromClient(client httpclient.Client, d DesiredCapabilities, r Req
 	return &browser, nil
 }
 
-func NewSession(addr string, d DesiredCapabilities, r RequiredCapabilities) (*Session, error) {
+func NewSession(addr string, opts protocol.Options) (*Session, error) {
 	client, err := httpclient.New(httpclient.WithBaseURL(addr))
 	if err != nil {
 		return nil, err
 	}
-	return NewSessionFromClient(client, d, r)
+	return NewSessionFromClient(client, opts)
 }
 
 // SessionID returns the unique session id.

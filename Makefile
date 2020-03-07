@@ -1,4 +1,4 @@
-.PHONY: deps test int-test unit-test mocks cover sync-coveralls
+.PHONY: deps test  mocks cover sync-coveralls download-drivers
 
 deps:
 	go mod download
@@ -18,10 +18,13 @@ sync-coveralls: deps
 	go test  -coverprofile=coverage.out `go list ./... | grep -v test`
 	goveralls -coverprofile=coverage.out -reponame=go-webdriver -repotoken=${COVERALLS_GO_WEBDRIVER_TOKEN} -service=local
 
+download-drivers:
+	@cd ./third_party/drivers && ./download.sh
+
 mocks: deps
 	mockgen -package=protocol -destination=pkg/protocol/transport_mock.go -source=pkg/protocol/transport.go
 	mockgen -package=protocol -destination=pkg/protocol/session_mock.go -source=pkg/protocol/session.go
-	mockgen -package=protocol -destination=pkg/protocol/timeouts_mock.go -source=pkg/protocol/timeouts.go
-	mockgen -package=protocol -destination=pkg/protocol/navigation_mock.go -source=pkg/protocol/navigation.go
-	mockgen -package=httpclient -destination=pkg/httpclient/client_mock.go -source=pkg/httpclient/client.go
+
+
+
 
