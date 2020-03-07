@@ -144,7 +144,7 @@ make download-drivers
 | [Get Element Text](https://w3c.github.io/webdriver/#get-element-text)               |               |  &#10003;     | &#10003; |
 | [Get Element Tag Name](https://w3c.github.io/webdriver/#get-element-tag-name)       |               |  &#10003;     | &#10003; |
 | [Get Element Rect](https://w3c.github.io/webdriver/#get-element-rect)               |               |  &#10003;     | &#10003; |
-| [s Element Enabled](https://w3c.github.io/webdriver/#is-element-enabled)            |               |  &#10003;     | &#10003; |
+| [Element Enabled](https://w3c.github.io/webdriver/#is-element-enabled)            |               |  &#10003;     | &#10003; |
 | [Element Click](https://w3c.github.io/webdriver/#element-click)                     |               |  &#10003;     | &#10003; |
 | [Element Clear](https://w3c.github.io/webdriver/#element-clear)                     |               |  &#10003;     | &#10003; |
 | [Element Send Keys](https://w3c.github.io/webdriver/#element-send-keys)             |               |  &#10003;     | &#10003; |
