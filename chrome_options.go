@@ -2,7 +2,6 @@ package webdriver
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/mediabuyerbot/go-webdriver/pkg/protocol"
@@ -95,9 +94,8 @@ type ChromeOptionsBuilder struct {
 	localState       *LocalState
 	perfLoggingPrefs *PerfLoggingPreferences
 	windowTypes      []string
-
-	prefs protocol.O
-	proxy *protocol.Proxy
+	prefs            *Pref
+	proxy            *protocol.Proxy
 
 	firstMatch  []protocol.O
 	alwaysMatch protocol.O
@@ -107,10 +105,8 @@ func ChromeCapabilities() *ChromeOptionsBuilder {
 	return &ChromeOptionsBuilder{
 		excludeSwitches: make([]string, 0),
 		windowTypes:     make([]string, 0),
-		prefs:           protocol.MakeOptions(),
-
-		firstMatch:  make([]protocol.O, 0),
-		alwaysMatch: make(protocol.O),
+		firstMatch:      make([]protocol.O, 0),
+		alwaysMatch:     make(protocol.O),
 	}
 }
 
@@ -180,17 +176,29 @@ func (b *ChromeOptionsBuilder) SetMiniDumpPath(path string) *ChromeOptionsBuilde
 }
 
 func (b *ChromeOptionsBuilder) AddExcludeSwitches(exclude ...string) *ChromeOptionsBuilder {
-	b.excludeSwitches = append(b.excludeSwitches, exclude...)
+	for _, arg := range exclude {
+		if len(arg) == 0 {
+			continue
+		}
+		b.excludeSwitches = append(b.excludeSwitches, arg)
+	}
 	return b
 }
 
 func (b *ChromeOptionsBuilder) AddWindowTypes(types ...string) *ChromeOptionsBuilder {
-	b.windowTypes = append(b.windowTypes, types...)
+	for _, arg := range types {
+		if len(arg) == 0 {
+			continue
+		}
+		b.windowTypes = append(b.windowTypes, arg)
+	}
 	return b
 }
 
 func (b *ChromeOptionsBuilder) AddFirstMatch(key string, value interface{}) *ChromeOptionsBuilder {
-	b.firstMatch = append(b.firstMatch, protocol.O{key: value})
+	if len(key) > 0 {
+		b.firstMatch = append(b.firstMatch, protocol.O{key: value})
+	}
 	return b
 }
 
@@ -239,8 +247,16 @@ func (b *ChromeOptionsBuilder) PerfLoggingPreferences() *PerfLoggingPreferences 
 	return b.perfLoggingPrefs
 }
 
-func (b *ChromeOptionsBuilder) Build() protocol.Options {
+func (b *ChromeOptionsBuilder) Pref() *Pref {
+	if b.prefs == nil {
+		b.prefs = &Pref{
+			opts: protocol.MakeOptions(),
+		}
+	}
+	return b.prefs
+}
 
+func (b *ChromeOptionsBuilder) Build() protocol.Options {
 	// extensions
 	if b.extensions != nil && len(b.extensions.opts) > 0 {
 		b.alwaysMatch.Set(ChromeCapabilityExtensionName, b.extensions.opts)
@@ -251,13 +267,8 @@ func (b *ChromeOptionsBuilder) Build() protocol.Options {
 		b.alwaysMatch.Set(ChromeCapabilityLocalStateName, b.localState.opts)
 	}
 
-	// proxy
-	if b.proxy != nil {
-		b.alwaysMatch.Set(protocol.CapabilityProxy, b.proxy)
-	}
-
 	// args
-	if b.args != nil {
+	if b.args != nil && len(b.args.opts) > 0 {
 		b.alwaysMatch.Set(ChromeCapabilityArgsName, b.args.opts)
 	}
 
@@ -277,8 +288,8 @@ func (b *ChromeOptionsBuilder) Build() protocol.Options {
 	}
 
 	// prefs
-	if b.prefs != nil && len(b.prefs) > 0 {
-		b.alwaysMatch.Set(ChromeCapabilityPreferencesName, b.prefs)
+	if b.prefs != nil && len(b.prefs.opts) > 0 {
+		b.alwaysMatch.Set(ChromeCapabilityPreferencesName, b.prefs.opts)
 	}
 
 	// perfLoggingPrefs
@@ -308,18 +319,17 @@ func (e *Extensions) Add(filepath ...string) error {
 	return nil
 }
 
-func (e *Extensions) add(path string) (s string, err error) {
-	extension := crx3.Extension(path)
+func (e *Extensions) add(extPath string) (s string, err error) {
+	extension := crx3.Extension(extPath)
 	if extension.IsZip() || extension.IsDir() {
 		err := extension.Pack(nil)
 		if err != nil {
 			return s, err
 		}
-		crx := strings.TrimRight(extension.String(), zipExt)
-		crx = filepath.Join(crx, crxExt)
-		if err := crx3.Extension(crx).Pack(nil); err != nil {
-			return s, err
-		}
+
+		crx := strings.TrimRight(extension.String(), "/")
+		crx = strings.TrimRight(crx, zipExt)
+		crx = crx + crxExt
 		extension = crx3.Extension(crx)
 	}
 
@@ -356,6 +366,15 @@ func (a *Arguments) WithStartMaximized() *Arguments {
 func (a *Arguments) Add(v ...string) *Arguments {
 	a.opts = append(a.opts, v...)
 	return a
+}
+
+type Pref struct {
+	opts protocol.O
+}
+
+func (ls *Pref) Set(key string, value interface{}) *Pref {
+	ls.opts.Set(key, value)
+	return ls
 }
 
 type LocalState struct {
@@ -397,6 +416,14 @@ func (e *MobileEmulation) SetUserAgent(agent string) *MobileEmulation {
 	return e.Set(mobileEmulationUserAgent, agent)
 }
 
+const (
+	perfLoggingEnableNetwork                = "enableNetwork"
+	perfLoggingEnableTimeline               = "enableTimeline"
+	perfLoggingEnablePage                   = "enablePage"
+	perfLoggingTracingCategories            = "tracingCategories"
+	perfLoggingBufferUsageReportingInterval = "bufferUsageReportingInterval"
+)
+
 type PerfLoggingPreferences struct {
 	opts protocol.O
 }
@@ -407,27 +434,27 @@ func (pp *PerfLoggingPreferences) Set(key string, value interface{}) *PerfLoggin
 }
 
 func (pp *PerfLoggingPreferences) EnableNetwork(flag bool) *PerfLoggingPreferences {
-	pp.opts.Set("enableNetwork", flag)
+	pp.opts.Set(perfLoggingEnableNetwork, flag)
 	return pp
 }
 
 func (pp *PerfLoggingPreferences) EnableTimeline(flag bool) *PerfLoggingPreferences {
-	pp.opts.Set("enableTimeline", flag)
+	pp.opts.Set(perfLoggingEnableTimeline, flag)
 	return pp
 }
 
 func (pp *PerfLoggingPreferences) EnablePage(flag bool) *PerfLoggingPreferences {
-	pp.opts.Set("enablePage", flag)
+	pp.opts.Set(perfLoggingEnablePage, flag)
 	return pp
 }
 
 func (pp *PerfLoggingPreferences) TracingCategories(s string) *PerfLoggingPreferences {
-	pp.opts.Set("tracingCategories", s)
+	pp.opts.Set(perfLoggingTracingCategories, s)
 	return pp
 }
 
 func (pp *PerfLoggingPreferences) BufferUsageReportingIntervalMillis(v uint) *PerfLoggingPreferences {
-	pp.opts.Set("bufferUsageReportingInterval", v)
+	pp.opts.Set(perfLoggingBufferUsageReportingInterval, v)
 	return pp
 }
 
@@ -435,18 +462,14 @@ type DeviceMetrics struct {
 	Width      uint    `json:"width"`
 	Height     uint    `json:"height"`
 	PixelRatio float64 `json:"pixelRatio"`
-	Touch      *bool   `json:"touch,omitempty"`
+	Touch      bool    `json:"touch,omitempty"`
 }
 
 func (dm *DeviceMetrics) ToOptions() protocol.O {
-	touch := true
-	if dm.Touch != nil {
-		touch = *dm.Touch
-	}
 	return protocol.O{
 		"width":      dm.Width,
 		"height":     dm.Height,
 		"pixelRatio": dm.PixelRatio,
-		"touch":      touch,
+		"touch":      dm.Touch,
 	}
 }

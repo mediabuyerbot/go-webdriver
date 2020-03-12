@@ -68,11 +68,14 @@ func (o O) GetOpts(key string) O {
 	if !ok {
 		return nil
 	}
-	t, ok := v.(O)
-	if !ok {
+	switch x := v.(type) {
+	case map[string]interface{}:
+		return O(x)
+	case O:
+		return x
+	default:
 		return nil
 	}
-	return t
 }
 
 func (o O) GetBool(key string) (b bool) {
@@ -85,6 +88,18 @@ func (o O) GetBool(key string) (b bool) {
 		return
 	}
 	return b
+}
+
+func (o O) GetUint(key string) (i uint) {
+	v, ok := o[key]
+	if !ok {
+		return
+	}
+	i, ok = v.(uint)
+	if !ok {
+		return
+	}
+	return i
 }
 
 func (o O) GetInt(key string) (i int) {
