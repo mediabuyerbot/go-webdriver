@@ -20,6 +20,7 @@ function retrieveChromeDriverVersion() {
 }
 
 function retrieveGeckoDriverVersion() {
+    # TODO: retrieve latest version
     version=${geckoDriverDefaultVersion}
 }
 

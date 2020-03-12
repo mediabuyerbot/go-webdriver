@@ -12,6 +12,8 @@
   + [Run sync coveralls](#run-sync-coveralls)
   + [Build mocks](#build-mocks) 
   + [Download ChromeDriver, GeckoDriver](#download-chromedriver-geckodriver-third_partydrivers)
+- [ChromeOptions docs](#chromeoptions-docs)
+- [FirefoxOptions docs](#firefoxoptions-docs)
 - [Protocol implementation](#protocol-implementation)  
   + [Session](#session)
   + [Timeouts](#timeouts)
@@ -58,6 +60,15 @@ make mocks
 ```shell script
 make download-drivers
 ```
+
+## ChromeOptions docs 
++ [V8 dev](https://v8.dev/)
++ [Chromium command line switches](https://peter.sh/experiments/chromium-command-line-switches/)
++ [Chromium command line switches](https://chromium.googlesource.com/chromium/src/+/master/chrome/common/chrome_switches.cc)
++ [Chromium command line prefs name](https://chromium.googlesource.com/chromium/src/+/master/chrome/common/pref_names.cc)
+
+## FirefoxOptions docs 
+TODO
 
 ## Protocol implementation
 ### Session
