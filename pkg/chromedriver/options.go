@@ -1,67 +1,120 @@
 package chromedriver
 
 import (
-	"time"
+	"io"
+	"strings"
 )
 
-type Option func(cd *ChromeDriver)
+type Option func(cd *Process)
 
-func WithStartTime(duration time.Duration) Option {
-	return func(cd *ChromeDriver) {
-		cd.startTimeout = duration
-	}
-}
-
-func WithThreads(threads int) Option {
-	return func(cd *ChromeDriver) {
-		cd.threads = threads
-	}
-}
-
+// WithPort port to listen on
 func WithPort(port int) Option {
-	return func(cd *ChromeDriver) {
-		cd.port = port
+	return func(p *Process) {
+		p.args.setPort(port)
 	}
 }
 
+// WithAdbPort adb server port
 func WithAdbPort(port int) Option {
-	return func(cd *ChromeDriver) {
-		cd.adbPort = port
+	return func(p *Process) {
+		p.args.setADBPort(port)
 	}
 }
 
-func WithHost(host string) Option {
-	return func(cd *ChromeDriver) {
-		cd.host = host
+// WithVerbose log verbosely
+func WithVerbose() Option {
+	return func(p *Process) {
+		p.args.setVerbose()
 	}
 }
 
-func WithCommand(cmd string) Option {
-	return func(cd *ChromeDriver) {
-		cd.path = cmd
+// WithSilent log nothing
+func WithSilent() Option {
+	return func(p *Process) {
+		p.args.setSilent()
 	}
 }
 
-func WithBaseURL(baseURL string) Option {
-	return func(cd *ChromeDriver) {
-		cd.baseURL = baseURL
+// WithAppendLog append log file instead of rewriting
+func WithAppendLog() Option {
+	return func(p *Process) {
+		p.args.setAppendLog()
 	}
 }
 
-func WithLogLevel(logLevel LogLevel) Option {
-	return func(cd *ChromeDriver) {
-		cd.logLevel = logLevel
+// WithReplayable (experimental) log verbosely and don't truncate long strings so that the log can be replayed.
+func WithReplayable() Option {
+	return func(p *Process) {
+		p.args.setReplayable()
 	}
 }
 
-func WithOnStartHook(h Hook) Option {
-	return func(cd *ChromeDriver) {
-		cd.onStartHook = h
+// WithVersion print the version number and exit
+func WithVersion() Option {
+	return func(p *Process) {
+		p.args.showVersion()
 	}
 }
 
-func WithOnCloseHook(h Hook) Option {
-	return func(cd *ChromeDriver) {
-		cd.onCloseHook = h
+// WithBaseURL base URL path prefix for commands, e.g. wd/url
+func WithBaseURL(url string) Option {
+	return func(p *Process) {
+		p.args.setBaseURL(url)
+	}
+}
+
+// WithLogLevel log level: ALL, DEBUG, INFO, WARNING, SEVERE, OFF
+func WithLogLevel(ll LogLevel) Option {
+	return func(p *Process) {
+		if err := p.args.setLogLevel(ll); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// WithWhitelistedIps whitelist of remote IP addresses which are allowed to connect to ChromeDriver
+func WithWhitelistedIps(ips []string) Option {
+	return func(p *Process) {
+		p.args.setWhitelistedIps(strings.Join(ips, ","))
+	}
+}
+
+// WithLogPath write server log to file instead of stderr
+func WithLogPath(path string) Option {
+	return func(p *Process) {
+		if err := p.args.setLogPath(path); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// WithReadableTimestamp add readable timestamps to log
+func WithReadableTimestamp() Option {
+	return func(p *Process) {
+		p.args.setReadableTimestamp()
+	}
+}
+
+func WithRunHook(hook Hook) Option {
+	return func(p *Process) {
+		p.runHook = hook
+	}
+}
+
+func WithStopHook(hook Hook) Option {
+	return func(p *Process) {
+		p.stopHook = hook
+	}
+}
+
+func WithStderr(writer io.Writer) Option {
+	return func(p *Process) {
+		p.stderr = writer
+	}
+}
+
+func WithStdout(writer io.Writer) Option {
+	return func(p *Process) {
+		p.stdout = writer
 	}
 }
