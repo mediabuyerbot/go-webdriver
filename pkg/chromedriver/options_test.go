@@ -1,6 +1,7 @@
 package chromedriver
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"testing"
@@ -20,6 +21,13 @@ func TestWithAdbPort(t *testing.T) {
 	proc := newProc(t, WithAdbPort(1234))
 	assert.Len(t, proc.Args(), 1)
 	assert.Equal(t, "--adb-port=1234", proc.Args()[0])
+
+	defer func() {
+		err := recover()
+		assert.Error(t, err.(error))
+		assert.Contains(t, err.(error).Error(), "out of range")
+	}()
+	newProc(t, WithAdbPort(-1))
 }
 
 func TestWithAppendLog(t *testing.T) {
@@ -64,6 +72,13 @@ func TestWithPort(t *testing.T) {
 	proc := newProc(t, WithPort(123))
 	assert.Len(t, proc.Args(), 1)
 	assert.Equal(t, "--port=123", proc.Args()[0])
+
+	defer func() {
+		err := recover()
+		assert.Error(t, err.(error))
+		assert.Contains(t, err.(error).Error(), "out of range")
+	}()
+	newProc(t, WithPort(999999999))
 }
 
 func TestWithReadableTimestamp(t *testing.T) {
@@ -91,7 +106,7 @@ func TestWithVerbose(t *testing.T) {
 }
 
 func TestWithVersion(t *testing.T) {
-	proc := newProc(t, WithVersion())
+	proc := newProc(t, WithShowVersion())
 	assert.Len(t, proc.Args(), 1)
 	assert.Equal(t, "--version", proc.Args()[0])
 }
@@ -110,4 +125,14 @@ func TestWithRunHook(t *testing.T) {
 func TestWithStopHook(t *testing.T) {
 	proc := newProc(t, WithStopHook(func(pid int) {}))
 	assert.NotNil(t, proc.stopHook)
+}
+
+func TestWithStderr(t *testing.T) {
+	proc := newProc(t, WithStderr(bytes.NewBuffer([]byte(``))))
+	assert.NotNil(t, proc.stderr)
+}
+
+func TestWithStdout(t *testing.T) {
+	proc := newProc(t, WithStdout(bytes.NewBuffer([]byte(``))))
+	assert.NotNil(t, proc.stdout)
 }

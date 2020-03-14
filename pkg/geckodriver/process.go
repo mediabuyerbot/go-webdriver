@@ -1,4 +1,4 @@
-package chromedriver
+package geckodriver
 
 import (
 	"context"
@@ -12,9 +12,11 @@ import (
 type Hook func(pid int)
 
 type Process struct {
-	args *arguments
-	bin  string
-	cmd  *exec.Cmd
+	args  *arguments
+	flags *flags
+
+	bin string
+	cmd *exec.Cmd
 
 	stdout io.Writer
 	stderr io.Writer
@@ -33,8 +35,9 @@ func New(bin string, opts ...Option) (*Process, error) {
 	}
 
 	cd := &Process{
-		args: newArguments(),
-		bin:  driverPath,
+		args:  newArguments(),
+		flags: newFlags(),
+		bin:   driverPath,
 	}
 
 	for _, opt := range opts {
@@ -46,7 +49,7 @@ func New(bin string, opts ...Option) (*Process, error) {
 
 func (d *Process) Run(ctx context.Context) error {
 	d.lock.Lock()
-	d.cmd = exec.CommandContext(ctx, d.bin, d.args.build()...)
+	d.cmd = exec.CommandContext(ctx, d.bin, d.buildArgs()...)
 
 	d.setWriters()
 
@@ -109,5 +112,11 @@ func (d *Process) isSignaled() bool {
 func (d *Process) Args() []string {
 	d.lock.RLock()
 	defer d.lock.RUnlock()
-	return d.args.build()
+	return d.buildArgs()
+}
+
+func (d *Process) buildArgs() []string {
+	args := append([]string{}, d.flags.Build()...)
+	args = append(args, d.args.Build()...)
+	return args
 }

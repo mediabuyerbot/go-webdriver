@@ -10,14 +10,18 @@ type Option func(cd *Process)
 // WithPort port to listen on
 func WithPort(port int) Option {
 	return func(p *Process) {
-		p.args.setPort(port)
+		if err := p.args.setPort(port); err != nil {
+			panic(err)
+		}
 	}
 }
 
 // WithAdbPort adb server port
 func WithAdbPort(port int) Option {
 	return func(p *Process) {
-		p.args.setADBPort(port)
+		if err := p.args.setADBPort(port); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -49,8 +53,8 @@ func WithReplayable() Option {
 	}
 }
 
-// WithVersion print the version number and exit
-func WithVersion() Option {
+// WithShowVersion print the version number and exit
+func WithShowVersion() Option {
 	return func(p *Process) {
 		p.args.showVersion()
 	}

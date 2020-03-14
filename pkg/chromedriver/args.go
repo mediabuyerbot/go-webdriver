@@ -2,6 +2,7 @@ package chromedriver
 
 import (
 	"fmt"
+	"math"
 	"os"
 )
 
@@ -60,7 +61,7 @@ func (ll LogLevel) Validate() error {
 	case All, Debug, Info, Warning, Severe, Off:
 		return nil
 	default:
-		return fmt.Errorf("unknonw log level %s", ll)
+		return fmt.Errorf("unknown log level %s", ll)
 	}
 }
 
@@ -74,12 +75,20 @@ func newArguments() *arguments {
 	}
 }
 
-func (a *arguments) setPort(port int) {
+func (a *arguments) setPort(port int) error {
+	if err := isValidPortRange(port); err != nil {
+		return err
+	}
 	a.args[argsPort] = fmt.Sprintf(argsPort, port)
+	return nil
 }
 
-func (a *arguments) setADBPort(port int) {
+func (a *arguments) setADBPort(port int) error {
+	if err := isValidPortRange(port); err != nil {
+		return err
+	}
 	a.args[argsADBPort] = fmt.Sprintf(argsADBPort, port)
+	return nil
 }
 
 func (a *arguments) setVerbose() {
@@ -152,5 +161,12 @@ func createFileIfNotExist(filepath string) error {
 		return err
 	}
 	defer file.Close()
+	return nil
+}
+
+func isValidPortRange(port int) error {
+	if port <= 0 || port >= math.MaxUint16 {
+		return fmt.Errorf("out of range port %d", port)
+	}
 	return nil
 }
