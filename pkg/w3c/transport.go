@@ -17,6 +17,11 @@ type Doer interface {
 	Do(ctx context.Context, method string, path string, p Params) (resp *Response, err error)
 }
 
+var (
+	ErrResponseWithoutBody = errors.New("w3c: response without body")
+	ErrEmptyResponse       = errors.New("w3c: empty response")
+)
+
 // Params represents the key-value pairs.
 type Params map[string]interface{}
 
@@ -25,6 +30,10 @@ type Params map[string]interface{}
 // associated with key.
 func (p Params) Set(key string, value interface{}) {
 	p[key] = value
+}
+
+func (p Params) IsEmpty() bool {
+	return len(p) == 0
 }
 
 type transport struct {
@@ -45,19 +54,24 @@ func WithClient(client httpclient.Client) Doer {
 }
 
 func (c *transport) handleResponse(r *http.Response) (resp *Response, err error) {
+	if r.Body == nil {
+		return nil, ErrResponseWithoutBody
+	}
+
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
 	if len(buf) == 0 {
-		return nil, fmt.Errorf("protocol: response is empty")
+		return nil, ErrEmptyResponse
 	}
 	if err := json.Unmarshal(buf, &resp); err != nil {
-		return nil, fmt.Errorf("protocol: %v, %s", err, string(buf))
+		return nil, fmt.Errorf("w3c: %v, %s", err, string(buf))
 	}
 	if r.StatusCode >= 400 || resp.Status != 0 {
 		return nil, parseError(r.StatusCode, resp)
 	}
+
 	resp.SessionID = strings.Trim(resp.SessionID, "{}\"")
 	return resp, nil
 }
@@ -92,11 +106,11 @@ func (c *transport) getRequest(ctx context.Context, path string) (resp *Response
 	return c.handleResponse(httpResp)
 }
 
-func (c *transport) postRequest(ctx context.Context, path string, params interface{}) (resp *Response, err error) {
-	if params == nil {
-		params = map[string]interface{}{}
+func (c *transport) postRequest(ctx context.Context, path string, p Params) (resp *Response, err error) {
+	if p == nil {
+		p = Params{}
 	}
-	payload, err := json.Marshal(params)
+	payload, err := json.Marshal(p)
 	if err != nil {
 		return nil, err
 	}

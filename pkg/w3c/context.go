@@ -3,6 +3,7 @@ package w3c
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -19,7 +20,7 @@ type Context interface {
 	CloseWindow(context.Context) ([]WindowHandle, error)
 
 	// NewWindow create a new top-level browsing context.
-	NewWindow(context.Context) (Window, error)
+	NewWindow(context.Context, WindowType) (Window, error)
 
 	// SwitchToWindow switching window will select the current top-level browsing context used as the target
 	// for all subsequent commands. In a tabbed browser, this will typically make the tab containing
@@ -73,6 +74,15 @@ func (wt WindowType) String() string {
 	return string(wt)
 }
 
+func (wt WindowType) Validate() error {
+	switch wt {
+	case Tab, Win:
+		return nil
+	default:
+		return errors.New("w3c: unknown window type")
+	}
+}
+
 func (fh FrameHandle) String() string {
 	return string(fh)
 }
@@ -114,8 +124,11 @@ func NewContext(doer Doer, sessID string) Context {
 	}
 }
 
-func (c *sessionContext) NewWindow(ctx context.Context) (w Window, err error) {
-	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/new", nil)
+func (c *sessionContext) NewWindow(ctx context.Context, wt WindowType) (w Window, err error) {
+	if err := wt.Validate(); err != nil {
+		return w, err
+	}
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/new", Params{"type": wt})
 	if err != nil {
 		return w, err
 	}
@@ -166,7 +179,7 @@ func (c *sessionContext) CloseWindow(ctx context.Context) ([]WindowHandle, error
 }
 
 func (c *sessionContext) SwitchToWindow(ctx context.Context, h WindowHandle) error {
-	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window", Params{"name": h})
+	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window", Params{"handle": h})
 	if err != nil {
 		return err
 	}

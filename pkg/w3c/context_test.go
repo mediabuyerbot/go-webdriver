@@ -406,20 +406,20 @@ func TestSessionContext_NewWindow(t *testing.T) {
 		&Response{
 			Value: value,
 		}, nil)
-	win, err := cx.NewWindow(ctx)
+	win, err := cx.NewWindow(ctx, Tab)
 	assert.Nil(t, err)
 	assert.Equal(t, win.Handle, botWindow.Handle)
 	assert.Equal(t, win.Type, botWindow.Type)
 
 	// returns error
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/new", gomock.Any()).Times(1).Return(nil, contextErr)
-	win, err = cx.NewWindow(ctx)
+	win, err = cx.NewWindow(ctx, Tab)
 	assert.Equal(t, err, contextErr)
 	assert.Equal(t, win.Handle, Window{}.Handle)
 
 	// returns error (invalid response)
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/new", gomock.Any()).Times(1).Return(&Response{Value: []byte(`{`)}, nil)
-	win, err = cx.NewWindow(ctx)
+	win, err = cx.NewWindow(ctx, Tab)
 	assert.Error(t, err)
 	assert.Equal(t, win.Handle, Window{}.Handle)
 }

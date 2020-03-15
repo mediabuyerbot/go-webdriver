@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"sync"
 	"syscall"
+	"time"
 )
 
 type Hook func(pid int)
@@ -60,7 +61,10 @@ func (d *Process) Run(ctx context.Context) error {
 	d.lock.Unlock()
 
 	if d.runHook != nil {
-		d.runHook(d.cmd.Process.Pid)
+		go func() {
+			time.Sleep(time.Second)
+			d.runHook(d.cmd.Process.Pid)
+		}()
 	}
 
 	err := d.cmd.Wait()

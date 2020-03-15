@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
-	"net/url"
 
 	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
 	"github.com/mediabuyerbot/httpclient"
@@ -74,8 +73,8 @@ func (b *Session) ScreenshotJPG(ctx context.Context) (image.Image, error) {
 }
 
 // Url navigate to a new URL.
-func (b *Session) Url(ctx context.Context, u *url.URL) error {
-	return b.navigation.NavigateTo(ctx, u.String())
+func (b *Session) Url(ctx context.Context, url string) error {
+	return b.navigation.NavigateTo(ctx, url)
 }
 
 // Title returns the current page title.
