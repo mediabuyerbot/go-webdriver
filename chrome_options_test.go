@@ -1,207 +1,57 @@
 package webdriver
 
 import (
+	"encoding/base64"
 	"os"
+	"path"
 	"testing"
 
-	"github.com/mediabuyerbot/go-webdriver/pkg/protocol"
+	"github.com/mediabuyerbot/go-crx3"
 
+	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestChromeOptions(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Nil(t, builder.extensions)
-	assert.Nil(t, builder.args)
-	assert.Nil(t, builder.mobileEmulation)
-	assert.Nil(t, builder.localState)
-	assert.Nil(t, builder.perfLoggingPrefs)
+	builder := ChromeOptions()
 
-	assert.Empty(t, builder.alwaysMatch)
-	assert.Empty(t, builder.excludeSwitches)
-	assert.Empty(t, builder.windowTypes)
-	assert.Empty(t, builder.prefs)
-	assert.Empty(t, builder.firstMatch)
-}
+	extension := base64.StdEncoding.EncodeToString([]byte(`extension`))
 
-func TestChromeOptionsBuilder_AddExcludeSwitches(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Empty(t, builder.excludeSwitches)
-	builder.AddExcludeSwitches("param1", "param2", "param3")
-	assert.Len(t, builder.excludeSwitches, 3)
+	assert.Nil(t, builder.SetBrowserName("chrome"))
+	assert.Nil(t, builder.SetBrowserVersion("91"))
+	assert.Nil(t, builder.SetPlatformName("linux"))
+	assert.Nil(t, builder.SetAcceptInsecureCerts(true))
+	assert.Nil(t, builder.SetPageLoadStrategy("normal"))
+	assert.Nil(t, builder.SetWindowRect(true))
+	assert.Nil(t, builder.SetProxy(&w3c.Proxy{SocksPort: 8090}))
+	assert.Nil(t, builder.SetUnhandledPromptBehavior("string"))
+	assert.Nil(t, builder.SetTimeout(w3c.Timeout{Script: 9000}))
+	assert.Nil(t, builder.SetDebuggerAddr("127.0.0.1:6666"))
+	assert.Nil(t, builder.SetDetach(true))
+	assert.Nil(t, builder.SetBinary("/path/to/chrome.bin"))
+	assert.Nil(t, builder.SetMiniDumpPath("/path/to/dump"))
+	assert.Nil(t, builder.SetLocalState("userProfile", "/profile"))
+	assert.Nil(t, builder.SetPref("pref", "pref"))
+	assert.Nil(t, builder.AddArgument("--headless", "--no-sniff"))
+	assert.Nil(t, builder.AddExtension(extension))
+	assert.Nil(t, builder.AddExcludeSwitches("--exclude", "--exclude2"))
+	assert.Nil(t, builder.AddWindowTypes("window"))
+	assert.Nil(t, builder.AddFirstMatch("browserName", "chrome"))
 
-	builder = ChromeCapabilities()
-	builder.AddExcludeSwitches("", "", "")
-	assert.Len(t, builder.excludeSwitches, 0)
-
-	builder = ChromeCapabilities()
-	builder.AddExcludeSwitches("param1")
-	assert.Len(t, builder.excludeSwitches, 1)
-	opts := builder.Build()
-	assert.NotNil(t, opts.AlwaysMatch()[ChromeCapabilityExcludeSwitchesName])
-	assert.Len(t, opts.AlwaysMatch()[ChromeCapabilityExcludeSwitchesName], 1)
-}
-
-func TestChromeOptionsBuilder_AddFirstMatch(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Empty(t, builder.firstMatch)
-	builder.AddFirstMatch(protocol.CapabilityBrowserName, "chrome")
-	builder.AddFirstMatch(protocol.CapabilityBrowserVersion, "123")
-	assert.Len(t, builder.firstMatch, 2)
-	opts := builder.Build()
-	assert.Len(t, opts.FirstMatch(), 2)
-
-	builder = ChromeCapabilities()
-	builder.AddFirstMatch("", "value")
-	builder.AddFirstMatch("", "")
-	builder.AddFirstMatch("", "")
-	opts = builder.Build()
-	assert.Len(t, builder.firstMatch, 0)
-	assert.Len(t, opts.FirstMatch(), 0)
-}
-
-func TestChromeOptionsBuilder_AddWindowTypes(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Empty(t, builder.windowTypes)
-	builder.AddWindowTypes("iframe", "tab", "other")
-	assert.Len(t, builder.windowTypes, 3)
-	opts := builder.Build()
-	assert.NotNil(t, opts.AlwaysMatch()[ChromeCapabilityWindowTypesName])
-	assert.Len(t, opts.AlwaysMatch()[ChromeCapabilityWindowTypesName], 3)
-
-	builder = ChromeCapabilities()
-	builder.AddWindowTypes("", "", "")
-	assert.Len(t, builder.windowTypes, 0)
-	opts = builder.Build()
-	assert.Nil(t, opts.AlwaysMatch()[ChromeCapabilityWindowTypesName])
-}
-
-func TestChromeOptionsBuilder_SetWindowRect(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(protocol.CapabilitySetWindowRect))
-	builder.SetWindowRect(true)
-	assert.True(t, builder.alwaysMatch.GetBool(protocol.CapabilitySetWindowRect))
-	opts := builder.Build()
-	assert.NotNil(t, opts.AlwaysMatch()[protocol.CapabilitySetWindowRect])
-}
-
-func TestChromeOptionsBuilder_Arguments(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Nil(t, builder.args)
-	builder.Arguments()
-	assert.NotNil(t, builder.args)
-	opts := builder.Build()
-	assert.Nil(t, opts.AlwaysMatch()[ChromeCapabilityArgsName])
-
-	builder = ChromeCapabilities()
-	assert.Nil(t, builder.args)
-	builder.Arguments().
-		WithHeadless().
-		WithStartMaximized().
-		WithUserDataPath("/path/to/profile").
-		Add("--ui-disabled-gpu")
-	opts = builder.Build()
-	assert.NotNil(t, builder.args)
-	assert.Len(t, builder.args.opts, 4)
-	assert.NotNil(t, opts.AlwaysMatch()[ChromeCapabilityArgsName])
-	assert.Len(t, opts.AlwaysMatch()[ChromeCapabilityArgsName], 4)
-}
-
-func TestChromeOptionsBuilder_Extensions(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Nil(t, builder.extensions)
-	builder.Extensions()
-	assert.NotNil(t, builder.extensions)
-	opts := builder.Build()
-	assert.Nil(t, opts.AlwaysMatch()[ChromeCapabilityExtensionName])
-
-	builder = ChromeCapabilities()
-	err := builder.Extensions().Add(
-		// load unpacked extension
-		"./testdata/chrome/extension",
-		// load zip extension
-		"./testdata/chrome/extension.zip",
-		// load crx extension
-		"./testdata/chrome/extension.crx",
-	)
-	assert.Nil(t, err)
-	assert.NotNil(t, builder.extensions.opts)
-	assert.Len(t, builder.extensions.opts, 3)
-	assert.FileExists(t, "./testdata/chrome/extension.crx.pem")
-	assert.Nil(t, os.Remove("./testdata/chrome/extension.crx.pem"))
-	for _, b64 := range builder.extensions.opts {
-		assert.NotZero(t, b64)
-	}
-	opts = builder.Build()
-	assert.NotNil(t, opts.AlwaysMatch()[ChromeCapabilityExtensionName])
-
-	builder = ChromeCapabilities()
-	err = builder.Extensions().Add("/dev/null")
-	assert.Error(t, err)
-}
-
-func TestChromeOptionsBuilder_LocalState(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Nil(t, builder.localState)
-	builder.LocalState()
-	assert.NotNil(t, builder.localState)
-	opts := builder.Build()
-	assert.Nil(t, opts.AlwaysMatch()[ChromeCapabilityLocalStateName])
-
-	builder = ChromeCapabilities()
-	builder.LocalState().Set("key", "value")
-	assert.NotNil(t, builder.localState)
-	assert.Len(t, builder.localState.opts, 1)
-	opts = builder.Build()
-	assert.NotNil(t, opts.AlwaysMatch()[ChromeCapabilityLocalStateName])
-	assert.Len(t, opts.AlwaysMatch()[ChromeCapabilityLocalStateName], 1)
-}
-
-func TestChromeOptionsBuilder_MobileEmulation(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Nil(t, builder.mobileEmulation)
-	builder.MobileEmulation()
-	assert.NotNil(t, builder.mobileEmulation)
-	opts := builder.Build()
-	assert.Nil(t, opts.AlwaysMatch()[ChromeCapabilityMobileEmulationName])
-
-	builder = ChromeCapabilities()
 	dm := &DeviceMetrics{
 		Width:      2000,
 		Height:     4000,
 		PixelRatio: 5,
 		Touch:      true,
 	}
+
 	builder.MobileEmulation().
+		SetDeviceName("name").
+		SetUserAgent("userAgent").
 		SetDeviceMetrics(dm).
-		SetUserAgent("user-agent blblblb").
-		SetDeviceName("console").
-		Set("key", "value")
-	opts = builder.Build()
-	alwaysMatch := opts.AlwaysMatch()
-	emul := alwaysMatch.GetOpts(ChromeCapabilityMobileEmulationName)
-	assert.NotNil(t, alwaysMatch[ChromeCapabilityMobileEmulationName])
-	assert.Equal(t, emul.GetString("userAgent"), "user-agent blblblb")
-	assert.Equal(t, emul.GetString("deviceName"), "console")
-	assert.Equal(t, emul.GetString("key"), "value")
-	metric := emul.GetOpts("deviceMetrics")
-	assert.Equal(t, dm.Width, metric.GetUint("width"))
-	assert.Equal(t, dm.Height, metric.GetUint("height"))
-	assert.Equal(t, dm.PixelRatio, metric.GetFloat("pixelRatio"))
-	assert.True(t, metric.GetBool("touch"))
+		Set("customKey", "customValue").
+		SetDeviceMetrics(nil)
 
-	builder.MobileEmulation().SetDeviceMetrics(nil)
-}
-
-func TestChromeOptionsBuilder_PerfLoggingPreferences(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Nil(t, builder.perfLoggingPrefs)
-	builder.PerfLoggingPreferences()
-	assert.NotNil(t, builder.perfLoggingPrefs)
-	opts := builder.Build()
-	assert.Nil(t, opts.AlwaysMatch()[ChromeCapabilityPerfLoggingPrefsName])
-
-	builder = ChromeCapabilities()
 	builder.PerfLoggingPreferences().
 		TracingCategories("trace").
 		BufferUsageReportingIntervalMillis(1).
@@ -209,189 +59,96 @@ func TestChromeOptionsBuilder_PerfLoggingPreferences(t *testing.T) {
 		EnablePage(true).
 		EnableTimeline(true).
 		Set("key", "value")
-	opts = builder.Build()
-	assert.NotNil(t, builder.perfLoggingPrefs)
-	alwaysMatch := opts.AlwaysMatch()
-	prefLogs := alwaysMatch.GetOpts(ChromeCapabilityPerfLoggingPrefsName)
-	assert.NotNil(t, prefLogs)
-	assert.True(t, prefLogs.GetBool(perfLoggingEnableNetwork))
-	assert.Equal(t, "trace", prefLogs.GetString(perfLoggingTracingCategories))
-	assert.Equal(t, prefLogs.GetUint(perfLoggingBufferUsageReportingInterval), uint(1))
-	assert.True(t, prefLogs.GetBool(perfLoggingEnablePage))
-	assert.True(t, prefLogs.GetBool(perfLoggingEnableTimeline))
-	assert.Equal(t, "value", prefLogs.GetString("key"))
+
+	browserOptions := builder.Build()
+	assert.NotNil(t, browserOptions)
+
+	// always match
+	alwaysMatch := browserOptions.AlwaysMatch()
+	assert.Equal(t, "chrome", alwaysMatch.GetString(w3c.CapabilityBrowserName))
+	assert.Equal(t, "91", alwaysMatch.GetString(w3c.CapabilityBrowserVersion))
+	assert.Equal(t, "linux", alwaysMatch.GetString(w3c.CapabilityPlatformName))
+	assert.True(t, alwaysMatch.GetBool(w3c.CapabilityAcceptInsecureCerts))
+	assert.Equal(t, "normal", alwaysMatch.GetString(w3c.CapabilityPageLoadStrategy))
+	assert.True(t, alwaysMatch.GetBool(w3c.CapabilitySetWindowRect))
+	assert.Equal(t, 8090, alwaysMatch.Section("proxy").GetInt("socksProxyPort"))
+	assert.Equal(t, "string", alwaysMatch.GetString(w3c.CapabilityUnhandledPromptBehavior))
+	assert.Equal(t, uint(9000), alwaysMatch.Section(w3c.CapabilityTimeouts).GetUint("script"))
+	assert.Equal(t, "127.0.0.1:6666", alwaysMatch.Section(ChromeOptionsKey).GetString(ChromeCapabilityDebuggerAddressName))
+	assert.True(t, alwaysMatch.Section(ChromeOptionsKey).GetBool(ChromeCapabilityDetachName))
+	assert.Equal(t, "/path/to/chrome.bin", alwaysMatch.Section(ChromeOptionsKey).GetString(ChromeCapabilityBinaryName))
+	assert.Equal(t, "/path/to/dump", alwaysMatch.Section(ChromeOptionsKey).GetString(ChromeCapabilityMiniDumpPathName))
+	assert.Equal(t, "/profile", alwaysMatch.Section(ChromeOptionsKey).Section("localState").GetString("userProfile"))
+	assert.Equal(t, "pref", alwaysMatch.Section(ChromeOptionsKey).Section(ChromeCapabilityPreferencesName).GetString("pref"))
+	assert.Len(t, alwaysMatch.Section(ChromeOptionsKey).GetStringSlice(ChromeCapabilityArgsName), 2)
+	assert.Len(t, alwaysMatch.Section(ChromeOptionsKey).GetStringSlice(ChromeCapabilityExtensionName), 1)
+	assert.Len(t, alwaysMatch.Section(ChromeOptionsKey).GetStringSlice(ChromeCapabilityWindowTypesName), 1)
+	assert.Len(t, browserOptions.FirstMatch(), 1)
+
+	// always match mobile emulation
+	mobe := alwaysMatch.Section(ChromeOptionsKey).Section(ChromeCapabilityMobileEmulationName)
+	assert.Equal(t, "name", mobe.GetString(mobileEmulationDeviceName))
+	assert.Equal(t, "userAgent", mobe.GetString(mobileEmulationUserAgent))
+	assert.Equal(t, "customValue", mobe.GetString("customKey"))
+	assert.Equal(t, uint(2000), mobe.Section("deviceMetrics").GetUint("width"))
+	assert.Equal(t, uint(4000), mobe.Section("deviceMetrics").GetUint("height"))
+	assert.Equal(t, float64(5), mobe.Section("deviceMetrics").GetFloat("pixelRatio"))
+	assert.True(t, mobe.Section("deviceMetrics").GetBool("touch"))
+
+	// always match perfLogs
+	perfLogs := alwaysMatch.Section(ChromeOptionsKey).Section(ChromeCapabilityPerfLoggingPrefsName)
+	assert.Equal(t, "trace", perfLogs.GetString(perfLoggingTracingCategories))
+	assert.Equal(t, uint(1), perfLogs.GetUint(perfLoggingBufferUsageReportingInterval))
+	assert.True(t, perfLogs.GetBool(perfLoggingEnableNetwork))
+	assert.True(t, perfLogs.GetBool(perfLoggingEnablePage))
+	assert.True(t, perfLogs.GetBool(perfLoggingEnableTimeline))
+	assert.Equal(t, "value", perfLogs.GetString("key"))
+
+	// load bad extension
+	err := builder.AddExtension("--")
+	assert.Error(t, err)
+
+	beforeExcludeSwitchesLen := len(builder.excludeSwitches)
+	err = builder.AddExcludeSwitches("", "", "")
+	assert.Nil(t, err)
+	assert.Equal(t, beforeExcludeSwitchesLen, len(builder.excludeSwitches))
+
+	beforeWindowTypesLen := len(builder.windowTypes)
+	err = builder.AddWindowTypes("", "")
+	assert.Nil(t, err)
+	assert.Equal(t, beforeWindowTypesLen, len(builder.windowTypes))
 }
 
-func TestChromeOptionsBuilder_SetAcceptInsecureCerts(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(protocol.CapabilityAcceptInsecureCerts))
-	opts := builder.Build()
-	assert.Nil(t, opts.AlwaysMatch()[protocol.CapabilityAcceptInsecureCerts])
+func TestLoadChromeExtension(t *testing.T) {
+	// load unpacked extension
+	tmp := path.Join(os.TempDir(), "ext")
+	err := os.Mkdir(tmp, os.ModePerm)
+	assert.Nil(t, err)
+	defer func() {
+		err = os.RemoveAll(tmp)
+		assert.Nil(t, err)
+	}()
+	b64, err := LoadChromeExtension(tmp)
+	assert.Nil(t, err)
+	assert.True(t, IsBase64(b64))
 
-	builder = ChromeCapabilities()
-	builder.SetAcceptInsecureCerts(true)
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(protocol.CapabilityAcceptInsecureCerts))
-	assert.True(t, opts.AlwaysMatch().GetBool(protocol.CapabilityAcceptInsecureCerts))
-}
+	// load zip extension
+	err = crx3.Extension(tmp).Zip()
+	assert.Nil(t, err)
+	defer func() {
+		err = os.Remove(tmp + ".zip")
+	}()
+	b64, err = LoadChromeExtension(tmp)
+	assert.Nil(t, err)
+	assert.True(t, IsBase64(b64))
 
-func TestChromeOptionsBuilder_SetBinary(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(ChromeCapabilityBinaryName))
-	opts := builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(ChromeCapabilityBinaryName))
+	// load crx
+	b64, err = LoadChromeExtension("./testdata/chrome/extension.crx")
+	assert.Nil(t, err)
+	assert.True(t, IsBase64(b64))
 
-	builder = ChromeCapabilities()
-	builder.SetBinary("/path/to/chrome")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(ChromeCapabilityBinaryName))
-	assert.Equal(t, "/path/to/chrome", opts.AlwaysMatch().GetString(ChromeCapabilityBinaryName))
-}
-
-func TestChromeOptionsBuilder_SetBrowserName(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(protocol.CapabilityBrowserName))
-	opts := builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(protocol.CapabilityBrowserName))
-
-	builder = ChromeCapabilities()
-	builder.SetBrowserName("chrome")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(protocol.CapabilityBrowserName))
-	assert.Equal(t, "chrome", opts.AlwaysMatch().GetString(protocol.CapabilityBrowserName))
-}
-
-func TestChromeOptionsBuilder_SetBrowserVersion(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(protocol.CapabilityBrowserVersion))
-	opts := builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(protocol.CapabilityBrowserVersion))
-
-	builder = ChromeCapabilities()
-	builder.SetBrowserVersion("chrome")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(protocol.CapabilityBrowserVersion))
-	assert.Equal(t, "chrome", opts.AlwaysMatch().GetString(protocol.CapabilityBrowserVersion))
-}
-
-func TestChromeOptionsBuilder_SetDebuggerAddr(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(ChromeCapabilityDebuggerAddressName))
-	opts := builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(ChromeCapabilityDebuggerAddressName))
-
-	builder = ChromeCapabilities()
-	builder.SetDebuggerAddr("127.0.0.1:8784")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(ChromeCapabilityDebuggerAddressName))
-	assert.Equal(t, "127.0.0.1:8784", opts.AlwaysMatch().GetString(ChromeCapabilityDebuggerAddressName))
-}
-
-func TestChromeOptionsBuilder_SetDetach(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(ChromeCapabilityDetachName))
-	opts := builder.Build()
-	assert.Nil(t, opts.AlwaysMatch()[ChromeCapabilityDetachName])
-
-	builder = ChromeCapabilities()
-	builder.SetDetach(true)
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(ChromeCapabilityDetachName))
-	assert.True(t, opts.AlwaysMatch().GetBool(ChromeCapabilityDetachName))
-}
-
-func TestChromeOptionsBuilder_SetMiniDumpPath(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(ChromeCapabilityMiniDumpPathName))
-	opts := builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(ChromeCapabilityMiniDumpPathName))
-
-	builder = ChromeCapabilities()
-	builder.SetMiniDumpPath("/path/to/dump")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(ChromeCapabilityMiniDumpPathName))
-	assert.Equal(t, "/path/to/dump", opts.AlwaysMatch().GetString(ChromeCapabilityMiniDumpPathName))
-}
-
-func TestChromeOptionsBuilder_SetPageLoadStrategy(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(protocol.CapabilityPageLoadStrategy))
-	opts := builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(protocol.CapabilityPageLoadStrategy))
-
-	builder = ChromeCapabilities()
-	builder.SetPageLoadStrategy("normal")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(protocol.CapabilityPageLoadStrategy))
-	assert.Equal(t, "normal", opts.AlwaysMatch().GetString(protocol.CapabilityPageLoadStrategy))
-}
-
-func TestChromeOptionsBuilder_SetPlatformName(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(protocol.CapabilityPlatformName))
-	opts := builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(protocol.CapabilityPlatformName))
-
-	builder = ChromeCapabilities()
-	builder.SetPlatformName("platform")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(protocol.CapabilityPlatformName))
-	assert.Equal(t, "platform", opts.AlwaysMatch().GetString(protocol.CapabilityPlatformName))
-}
-
-func TestChromeOptionsBuilder_SetPlatformVersion(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(protocol.CapabilityPlatformVersion))
-	opts := builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(protocol.CapabilityPlatformVersion))
-
-	builder = ChromeCapabilities()
-	builder.SetPlatformVersion("version")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(protocol.CapabilityPlatformVersion))
-	assert.Equal(t, "version", opts.AlwaysMatch().GetString(protocol.CapabilityPlatformVersion))
-}
-
-func TestChromeOptionsBuilder_SetProxy(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(protocol.CapabilityProxy))
-	opts := builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(protocol.CapabilityProxy))
-
-	builder = ChromeCapabilities()
-	proxy := &protocol.Proxy{
-		FTP:  "type",
-		HTTP: "http",
-	}
-	builder.SetProxy(proxy)
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().HasNot(protocol.CapabilityProxy))
-	assert.Equal(t, proxy, opts.Proxy())
-}
-
-func TestChromeOptionsBuilder_SetUnhandledPromptBehavior(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.True(t, builder.alwaysMatch.HasNot(protocol.CapabilityUnhandledPromptBehavior))
-	opts := builder.Build()
-	assert.Nil(t, opts.AlwaysMatch()[protocol.CapabilityUnhandledPromptBehavior])
-
-	builder = ChromeCapabilities()
-	builder.SetUnhandledPromptBehavior("string")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(protocol.CapabilityUnhandledPromptBehavior))
-	assert.Equal(t, "string", opts.AlwaysMatch().GetString(protocol.CapabilityUnhandledPromptBehavior))
-}
-
-func TestChromeOptionsBuilder_Pref(t *testing.T) {
-	builder := ChromeCapabilities()
-	assert.Nil(t, builder.prefs)
-	builder.Pref()
-	opts := builder.Build()
-	assert.Nil(t, opts.AlwaysMatch().GetOpts(ChromeCapabilityPreferencesName))
-
-	builder = ChromeCapabilities()
-	builder.Pref().Set("key", "value")
-	opts = builder.Build()
-	assert.True(t, opts.AlwaysMatch().Has(ChromeCapabilityPreferencesName))
-	assert.Equal(t, "value", opts.AlwaysMatch().GetOpts(ChromeCapabilityPreferencesName).GetString("key"))
+	// load bad crx
+	b64, err = LoadChromeExtension("./testdata/chrome/none.crx")
+	assert.Error(t, err)
+	assert.False(t, IsBase64(b64))
 }

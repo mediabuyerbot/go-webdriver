@@ -1,12 +1,12 @@
 package webdriver
 
 import (
-	"fmt"
+	"encoding/base64"
+	"errors"
 	"strings"
 
-	"github.com/mediabuyerbot/go-webdriver/pkg/protocol"
-
 	"github.com/mediabuyerbot/go-crx3"
+	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
 )
 
 const (
@@ -57,274 +57,211 @@ const (
 	// A list of window types that will appear in the list of window handles.
 	// For access to <webview> elements, include "webview" in this list.
 	ChromeCapabilityWindowTypesName = "windowTypes"
-)
 
-type Builder interface {
-	Build() protocol.Options
-}
+	ChromeOptionsKey = "goog:chromeOptions"
+)
 
 const (
 	zipExt = ".zip"
 	crxExt = ".crx"
 )
 
-type ChromeOptions struct {
-	proxy       *protocol.Proxy
-	firstMatch  []protocol.O
-	alwaysMatch protocol.O
-}
-
-func (o *ChromeOptions) Proxy() *protocol.Proxy {
-	return o.proxy
-}
-
-func (o *ChromeOptions) FirstMatch() []protocol.O {
-	return o.firstMatch
-}
-
-func (o *ChromeOptions) AlwaysMatch() protocol.O {
-	return o.alwaysMatch
-}
+var ErrBase64Format = errors.New("webdriver: string does not match format base64")
 
 type ChromeOptionsBuilder struct {
-	extensions       *Extensions
-	args             *Arguments
-	excludeSwitches  []string
-	mobileEmulation  *MobileEmulation
-	localState       *LocalState
-	perfLoggingPrefs *PerfLoggingPreferences
-	windowTypes      []string
-	prefs            *Pref
-	proxy            *protocol.Proxy
+	//W3C Capabilities
+	capabilities w3c.Capabilities
 
-	firstMatch  []protocol.O
-	alwaysMatch protocol.O
+	// Chrome options
+	chromeCapabilities w3c.Capabilities
+	extensions         []string
+	excludeSwitches    []string
+	windowTypes        []string
+	localState         w3c.Capabilities
+	args               []string
+	pref               w3c.Capabilities
+
+	mobileEmulation *MobileEmulation
+	perfLoggingPref *PerfLoggingPreferences
+
+	firstMatch []w3c.Capabilities
 }
 
-func ChromeCapabilities() *ChromeOptionsBuilder {
+func ChromeOptions() *ChromeOptionsBuilder {
 	return &ChromeOptionsBuilder{
-		excludeSwitches: make([]string, 0),
-		windowTypes:     make([]string, 0),
-		firstMatch:      make([]protocol.O, 0),
-		alwaysMatch:     make(protocol.O),
+		capabilities: w3c.MakeCapabilities(),
+
+		chromeCapabilities: w3c.MakeCapabilities(),
+		extensions:         make([]string, 0),
+		excludeSwitches:    make([]string, 0),
+		windowTypes:        make([]string, 0),
+		localState:         w3c.MakeCapabilities(),
+		args:               make([]string, 0),
+		pref:               w3c.MakeCapabilities(),
+
+		firstMatch: make([]w3c.Capabilities, 0),
 	}
 }
 
-func (b *ChromeOptionsBuilder) SetBrowserName(name string) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(protocol.CapabilityBrowserName, name)
-	return b
+func (b *ChromeOptionsBuilder) SetBrowserName(name string) error {
+	return w3c.SetBrowserName(b.capabilities, name)
 }
 
-func (b *ChromeOptionsBuilder) SetBrowserVersion(version string) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(protocol.CapabilityBrowserVersion, version)
-	return b
+func (b *ChromeOptionsBuilder) SetBrowserVersion(version string) error {
+	return w3c.SetBrowserVersion(b.capabilities, version)
 }
 
-func (b *ChromeOptionsBuilder) SetPlatformName(platform string) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(protocol.CapabilityPlatformName, platform)
-	return b
+func (b *ChromeOptionsBuilder) SetPlatformName(platform string) error {
+	return w3c.SetPlatformName(b.capabilities, w3c.Platform(platform))
 }
 
-func (b *ChromeOptionsBuilder) SetPlatformVersion(version string) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(protocol.CapabilityPlatformVersion, version)
-	return b
+func (b *ChromeOptionsBuilder) SetAcceptInsecureCerts(flag bool) error {
+	return w3c.SetAcceptInsecureCerts(b.capabilities, flag)
 }
 
-func (b *ChromeOptionsBuilder) SetAcceptInsecureCerts(flag bool) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(protocol.CapabilityAcceptInsecureCerts, flag)
-	return b
+func (b *ChromeOptionsBuilder) SetPageLoadStrategy(strategy string) error {
+	return w3c.SetPageLoadStrategy(b.capabilities, strategy)
 }
 
-func (b *ChromeOptionsBuilder) SetPageLoadStrategy(strategy string) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(protocol.CapabilityPageLoadStrategy, strategy)
-	return b
+func (b *ChromeOptionsBuilder) SetWindowRect(flag bool) error {
+	return w3c.SetWindowRect(b.capabilities, flag)
 }
 
-func (b *ChromeOptionsBuilder) SetWindowRect(flag bool) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(protocol.CapabilitySetWindowRect, flag)
-	return b
+func (b *ChromeOptionsBuilder) SetProxy(proxy *w3c.Proxy) error {
+	return w3c.SetProxy(b.capabilities, proxy)
 }
 
-func (b *ChromeOptionsBuilder) SetProxy(p *protocol.Proxy) *ChromeOptionsBuilder {
-	b.proxy = p
-	return b
+func (b *ChromeOptionsBuilder) SetUnhandledPromptBehavior(prompt string) error {
+	return w3c.SetUnhandledPromptBehavior(b.capabilities, prompt)
 }
 
-func (b *ChromeOptionsBuilder) SetDebuggerAddr(addr string) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(ChromeCapabilityDebuggerAddressName, addr)
-	return b
+func (b *ChromeOptionsBuilder) SetTimeout(timeout w3c.Timeout) error {
+	return w3c.SetTimeout(b.capabilities, timeout)
 }
 
-func (b *ChromeOptionsBuilder) SetUnhandledPromptBehavior(s string) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(protocol.CapabilityUnhandledPromptBehavior, s)
-	return b
+func (b *ChromeOptionsBuilder) SetDebuggerAddr(addr string) error {
+	b.chromeCapabilities.Set(ChromeCapabilityDebuggerAddressName, addr)
+	return nil
 }
 
-func (b *ChromeOptionsBuilder) SetDetach(flag bool) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(ChromeCapabilityDetachName, flag)
-	return b
+func (b *ChromeOptionsBuilder) SetDetach(flag bool) error {
+	b.chromeCapabilities.Set(ChromeCapabilityDetachName, flag)
+	return nil
 }
 
-func (b *ChromeOptionsBuilder) SetBinary(binPath string) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(ChromeCapabilityBinaryName, binPath)
-	return b
+func (b *ChromeOptionsBuilder) SetBinary(binPath string) error {
+	b.chromeCapabilities.Set(ChromeCapabilityBinaryName, binPath)
+	return nil
 }
 
-func (b *ChromeOptionsBuilder) SetMiniDumpPath(path string) *ChromeOptionsBuilder {
-	b.alwaysMatch.Set(ChromeCapabilityMiniDumpPathName, path)
-	return b
+func (b *ChromeOptionsBuilder) SetMiniDumpPath(path string) error {
+	b.chromeCapabilities.Set(ChromeCapabilityMiniDumpPathName, path)
+	return nil
 }
 
-func (b *ChromeOptionsBuilder) AddExcludeSwitches(exclude ...string) *ChromeOptionsBuilder {
+func (b *ChromeOptionsBuilder) SetLocalState(key string, value interface{}) error {
+	b.localState.Set(key, value)
+	return nil
+}
+
+func (b *ChromeOptionsBuilder) SetPref(key string, value interface{}) error {
+	b.pref.Set(key, value)
+	return nil
+}
+
+func (b *ChromeOptionsBuilder) AddArgument(arg ...string) error {
+	b.args = append(b.args, arg...)
+	return nil
+}
+
+func (b *ChromeOptionsBuilder) AddExtension(base64 string) error {
+	if ok := IsBase64(base64); !ok {
+		return ErrBase64Format
+	}
+	b.extensions = append(b.extensions, base64)
+	return nil
+}
+
+func (b *ChromeOptionsBuilder) AddExcludeSwitches(exclude ...string) error {
 	for _, arg := range exclude {
 		if len(arg) == 0 {
 			continue
 		}
 		b.excludeSwitches = append(b.excludeSwitches, arg)
 	}
-	return b
+	return nil
 }
 
-func (b *ChromeOptionsBuilder) AddWindowTypes(types ...string) *ChromeOptionsBuilder {
+func (b *ChromeOptionsBuilder) AddWindowTypes(types ...string) error {
 	for _, arg := range types {
 		if len(arg) == 0 {
 			continue
 		}
 		b.windowTypes = append(b.windowTypes, arg)
 	}
-	return b
+	return nil
 }
 
-func (b *ChromeOptionsBuilder) AddFirstMatch(key string, value interface{}) *ChromeOptionsBuilder {
+func (b *ChromeOptionsBuilder) AddFirstMatch(key string, value interface{}) error {
 	if len(key) > 0 {
-		b.firstMatch = append(b.firstMatch, protocol.O{key: value})
+		cap := w3c.MakeCapabilities()
+		cap.Set(key, value)
+		b.firstMatch = append(b.firstMatch, cap)
 	}
-	return b
-}
-
-func (b *ChromeOptionsBuilder) LocalState() *LocalState {
-	if b.localState == nil {
-		b.localState = &LocalState{
-			opts: protocol.MakeOptions(),
-		}
-	}
-	return b.localState
-}
-
-func (b *ChromeOptionsBuilder) Arguments() *Arguments {
-	if b.args == nil {
-		b.args = &Arguments{
-			opts: make([]string, 0, 32),
-		}
-	}
-	return b.args
-}
-
-func (b *ChromeOptionsBuilder) Extensions() *Extensions {
-	if b.extensions == nil {
-		b.extensions = &Extensions{
-			opts: make([]string, 0, 32),
-		}
-	}
-	return b.extensions
+	return nil
 }
 
 func (b *ChromeOptionsBuilder) MobileEmulation() *MobileEmulation {
 	if b.mobileEmulation == nil {
-		b.mobileEmulation = &MobileEmulation{
-			opts: protocol.MakeOptions(),
-		}
+		b.mobileEmulation = &MobileEmulation{opts: w3c.MakeCapabilities()}
 	}
 	return b.mobileEmulation
 }
 
 func (b *ChromeOptionsBuilder) PerfLoggingPreferences() *PerfLoggingPreferences {
-	if b.perfLoggingPrefs == nil {
-		b.perfLoggingPrefs = &PerfLoggingPreferences{
-			opts: protocol.MakeOptions(),
-		}
+	if b.perfLoggingPref == nil {
+		b.perfLoggingPref = &PerfLoggingPreferences{opts: w3c.MakeCapabilities()}
 	}
-	return b.perfLoggingPrefs
+	return b.perfLoggingPref
 }
 
-func (b *ChromeOptionsBuilder) Pref() *Pref {
-	if b.prefs == nil {
-		b.prefs = &Pref{
-			opts: protocol.MakeOptions(),
-		}
+func (b *ChromeOptionsBuilder) Build() w3c.BrowserOptions {
+	if len(b.extensions) > 0 {
+		b.chromeCapabilities[ChromeCapabilityExtensionName] = b.extensions
 	}
-	return b.prefs
-}
-
-func (b *ChromeOptionsBuilder) Build() protocol.Options {
-	// extensions
-	if b.extensions != nil && len(b.extensions.opts) > 0 {
-		b.alwaysMatch.Set(ChromeCapabilityExtensionName, b.extensions.opts)
+	if len(b.localState) > 0 {
+		b.chromeCapabilities[ChromeCapabilityLocalStateName] = b.localState
 	}
-
-	// local state
-	if b.localState != nil && len(b.localState.opts) > 0 {
-		b.alwaysMatch.Set(ChromeCapabilityLocalStateName, b.localState.opts)
-	}
-
-	// args
-	if b.args != nil && len(b.args.opts) > 0 {
-		b.alwaysMatch.Set(ChromeCapabilityArgsName, b.args.opts)
-	}
-
-	// exclude switches
 	if len(b.excludeSwitches) > 0 {
-		b.alwaysMatch.Set(ChromeCapabilityExcludeSwitchesName, b.excludeSwitches)
+		b.chromeCapabilities[ChromeCapabilityExcludeSwitchesName] = b.excludeSwitches
 	}
-
-	// window types
 	if len(b.windowTypes) > 0 {
-		b.alwaysMatch.Set(ChromeCapabilityWindowTypesName, b.windowTypes)
+		b.chromeCapabilities[ChromeCapabilityWindowTypesName] = b.windowTypes
 	}
-
-	// mobile emulation
+	if len(b.args) > 0 {
+		b.chromeCapabilities[ChromeCapabilityArgsName] = b.args
+	}
+	if len(b.pref) > 0 {
+		b.chromeCapabilities[ChromeCapabilityPreferencesName] = b.pref
+	}
 	if b.mobileEmulation != nil && len(b.mobileEmulation.opts) > 0 {
-		b.alwaysMatch.Set(ChromeCapabilityMobileEmulationName, b.mobileEmulation.opts)
+		b.chromeCapabilities[ChromeCapabilityMobileEmulationName] = b.mobileEmulation.opts
+	}
+	if b.perfLoggingPref != nil && len(b.perfLoggingPref.opts) > 0 {
+		b.chromeCapabilities[ChromeCapabilityPerfLoggingPrefsName] = b.perfLoggingPref.opts
 	}
 
-	// prefs
-	if b.prefs != nil && len(b.prefs.opts) > 0 {
-		b.alwaysMatch.Set(ChromeCapabilityPreferencesName, b.prefs.opts)
-	}
+	b.capabilities.Set(ChromeOptionsKey, b.chromeCapabilities)
 
-	// perfLoggingPrefs
-	if b.perfLoggingPrefs != nil && len(b.perfLoggingPrefs.opts) > 0 {
-		b.alwaysMatch.Set(ChromeCapabilityPerfLoggingPrefsName, b.perfLoggingPrefs.opts)
-	}
-
-	return &ChromeOptions{
-		alwaysMatch: b.alwaysMatch,
-		firstMatch:  b.firstMatch,
-		proxy:       b.proxy,
-	}
+	return w3c.NewBrowserOptions(b.capabilities, b.firstMatch)
 }
 
-type Extensions struct {
-	opts []string
-}
-
-func (e *Extensions) Add(filepath ...string) error {
-	for _, fp := range filepath {
-		base64, err := e.add(fp)
-		if err != nil {
-			return fmt.Errorf("extension %s error %v", fp, err)
-		}
-		e.opts = append(e.opts, base64)
-	}
-	return nil
-}
-
-func (e *Extensions) add(extPath string) (s string, err error) {
-	extension := crx3.Extension(extPath)
+func LoadChromeExtension(extensionPath string) (base64 string, err error) {
+	extension := crx3.Extension(extensionPath)
 	if extension.IsZip() || extension.IsDir() {
 		err := extension.Pack(nil)
 		if err != nil {
-			return s, err
+			return base64, err
 		}
 
 		crx := strings.TrimRight(extension.String(), "/")
@@ -334,56 +271,22 @@ func (e *Extensions) add(extPath string) (s string, err error) {
 	}
 
 	if !extension.IsCRX3() {
-		return s, crx3.ErrUnsupportedFileFormat
+		return base64, crx3.ErrUnsupportedFileFormat
 	}
 
-	base64, err := extension.ToBase64()
+	b, err := extension.ToBase64()
 	if err != nil {
-		return s, err
+		return base64, err
 	}
-	return string(base64), nil
+	return string(b), nil
 }
 
-type Arguments struct {
-	opts []string
-}
-
-// WithHeadless run in headless mode, i.e., without a UI or display server dependencies.
-func (a *Arguments) WithHeadless() *Arguments {
-	return a.Add("--headless")
-}
-
-// WithUserDataPath set a custom user profile to use.
-func (a *Arguments) WithUserDataPath(path string) *Arguments {
-	return a.Add("user-data-dir=" + path)
-}
-
-// WithStartMaximize starts the browser maximized, regardless of any previous settings.
-func (a *Arguments) WithStartMaximized() *Arguments {
-	return a.Add("--start-maximized")
-}
-
-func (a *Arguments) Add(v ...string) *Arguments {
-	a.opts = append(a.opts, v...)
-	return a
-}
-
-type Pref struct {
-	opts protocol.O
-}
-
-func (ls *Pref) Set(key string, value interface{}) *Pref {
-	ls.opts.Set(key, value)
-	return ls
-}
-
-type LocalState struct {
-	opts protocol.O
-}
-
-func (ls *LocalState) Set(key string, value interface{}) *LocalState {
-	ls.opts.Set(key, value)
-	return ls
+func IsBase64(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	_, err := base64.StdEncoding.DecodeString(s)
+	return err == nil
 }
 
 const (
@@ -393,7 +296,7 @@ const (
 )
 
 type MobileEmulation struct {
-	opts protocol.O
+	opts w3c.Capabilities
 }
 
 func (e *MobileEmulation) Set(key string, value interface{}) *MobileEmulation {
@@ -409,7 +312,7 @@ func (e *MobileEmulation) SetDeviceMetrics(m *DeviceMetrics) *MobileEmulation {
 	if m == nil {
 		return e
 	}
-	return e.Set(mobileEmulationDeviceMetrics, m.ToOptions())
+	return e.Set(mobileEmulationDeviceMetrics, m.Capabilities())
 }
 
 func (e *MobileEmulation) SetUserAgent(agent string) *MobileEmulation {
@@ -425,7 +328,7 @@ const (
 )
 
 type PerfLoggingPreferences struct {
-	opts protocol.O
+	opts w3c.Capabilities
 }
 
 func (pp *PerfLoggingPreferences) Set(key string, value interface{}) *PerfLoggingPreferences {
@@ -465,8 +368,8 @@ type DeviceMetrics struct {
 	Touch      bool    `json:"touch,omitempty"`
 }
 
-func (dm *DeviceMetrics) ToOptions() protocol.O {
-	return protocol.O{
+func (dm *DeviceMetrics) Capabilities() w3c.Capabilities {
+	return w3c.Capabilities{
 		"width":      dm.Width,
 		"height":     dm.Height,
 		"pixelRatio": dm.PixelRatio,

@@ -22,8 +22,9 @@ download-drivers:
 	@cd ./third_party/drivers && ./download.sh
 
 mocks: deps
-	mockgen -package=protocol -destination=pkg/protocol/transport_mock.go -source=pkg/protocol/transport.go
-	mockgen -package=protocol -destination=pkg/protocol/session_mock.go -source=pkg/protocol/session.go
+	mockgen -package=w3c -destination=pkg/w3c/transport_mock.go -source=pkg/w3c/transport.go
+	mockgen -package=w3c -destination=pkg/w3c/session_mock.go -source=pkg/w3c/session.go
+	mockgen -package=w3c -destination=pkg/w3c/browser_options_mock.go -source=pkg/w3c/browser_options.go
 
 
 
