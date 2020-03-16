@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/mediabuyerbot/go-webdriver"
@@ -17,6 +16,9 @@ func main() {
 		exitWithError(err)
 	}
 	defer func() {
+		if err := recover(); err != nil {
+			log.Println("panic:", err)
+		}
 		if err := browser.Close(); err != nil {
 			log.Println(err)
 		}
@@ -187,5 +189,5 @@ func closeTabs(browser *webdriver.Browser, tabs []w3c.WindowHandle) error {
 
 func exitWithError(err error) {
 	fmt.Println(err)
-	os.Exit(1)
+	panic(err)
 }
