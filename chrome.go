@@ -32,10 +32,6 @@ func Chrome(opts *ChromeOptionsBuilder) (*Browser, error) {
 	}
 	driverPath := os.Getenv(EnvChromeDriverPath)
 	if len(driverPath) == 0 {
-		//driverPath, err = exec.LookPath("chromedriver")
-		//if err != nil {
-		//	return nil, err
-		//}
 		driverPath = bin.ChromeDriver64()
 	}
 	driver, err := chromedriver.New(driverPath,
@@ -56,11 +52,12 @@ func Chrome(opts *ChromeOptionsBuilder) (*Browser, error) {
 		if err := driver.Run(ctx); err != nil {
 			select {
 			case done <- err:
-				log.Printf("[ERROR] chromedriver chrome failed to start\n%v\n", err)
+				log.Printf("[ERROR] chromedriver failed to start\n%v\n", err)
 			default:
-				log.Printf("[ERROR] chromedriver chrome failed\n%v\n", err)
+				log.Printf("[ERROR] chromedriver \n%v\n", err)
 			}
 		}
+		close(done)
 	}()
 	err = <-done
 	if err != nil {

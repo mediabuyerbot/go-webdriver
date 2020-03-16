@@ -22,6 +22,7 @@ func main() {
 		if err := browser.Close(); err != nil {
 			log.Println(err)
 		}
+		time.Sleep(time.Second)
 	}()
 
 	tabs := make([]w3c.WindowHandle, 10)
@@ -50,8 +51,6 @@ func main() {
 	if err := closeTabs(browser, tabs); err != nil {
 		exitWithError(err)
 	}
-
-	time.Sleep(5 * time.Second)
 }
 
 func wait() {
