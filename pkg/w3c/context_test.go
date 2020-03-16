@@ -241,28 +241,35 @@ func TestSessionContext_SetRect(t *testing.T) {
 	}
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/rect", gomock.Any()).Times(1).Return(
 		&Response{
-			Value: []byte(`null`),
+			Value: []byte(`{"height":375,"width":500,"x":0,"y":0}`),
 		}, nil).Do(func(_ context.Context, method string, path string, p Params) {
 		assert.Equal(t, p["width"], newRect.Width)
 		assert.Equal(t, p["height"], newRect.Height)
 		assert.Equal(t, p["x"], newRect.X)
 		assert.Equal(t, p["y"], newRect.Y)
 	})
-	err := cx.SetRect(ctx, newRect)
+	winRect, err := cx.SetRect(ctx, newRect)
 	assert.Nil(t, err)
+	assert.Equal(t, 375, winRect.Height)
+	assert.Equal(t, 500, winRect.Width)
+	assert.Equal(t, 0, winRect.X)
+	assert.Equal(t, 0, winRect.Y)
 
 	// returns error
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/rect", gomock.Any()).Times(1).Return(nil, contextErr)
-	err = cx.SetRect(ctx, newRect)
+	_, err = cx.SetRect(ctx, newRect)
 	assert.Error(t, err)
 	assert.Equal(t, err, contextErr)
 
-	// returns error (invalid response)
+	// returns empty response
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/rect", gomock.Any()).Times(1).Return(
 		&Response{Value: []byte(`{}`)}, nil)
-	err = cx.SetRect(ctx, newRect)
-	assert.Error(t, err)
-	assert.Equal(t, err, ErrInvalidResponse)
+	winRect, err = cx.SetRect(ctx, newRect)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, winRect.Height)
+	assert.Equal(t, 0, winRect.Width)
+	assert.Equal(t, 0, winRect.X)
+	assert.Equal(t, 0, winRect.Y)
 }
 
 func TestSessionContext_SwitchToFrame(t *testing.T) {

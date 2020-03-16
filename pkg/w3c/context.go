@@ -35,7 +35,7 @@ type Context interface {
 
 	// SetRect alters the size and the position of the operating system window
 	// corresponding to the current top-level browsing context.
-	SetRect(context.Context, Rect) error
+	SetRect(context.Context, Rect) (Rect, error)
 
 	// returns the size and position on the screen of the operating system
 	// window corresponding to the current top-level browsing context.
@@ -143,7 +143,10 @@ func (c *sessionContext) GetWindowHandle(ctx context.Context) (wh WindowHandle, 
 	if err != nil {
 		return wh, err
 	}
-	return WindowHandle(resp.Value), nil
+	if err := json.Unmarshal(resp.Value, &wh); err != nil {
+		return wh, err
+	}
+	return wh, nil
 }
 
 func (c *sessionContext) GetWindowHandles(ctx context.Context) ([]WindowHandle, error) {
@@ -211,7 +214,7 @@ func (c *sessionContext) SwitchToParentFrame(ctx context.Context) error {
 	return ErrInvalidResponse
 }
 
-func (c *sessionContext) SetRect(ctx context.Context, r Rect) error {
+func (c *sessionContext) SetRect(ctx context.Context, r Rect) (winRect Rect, err error) {
 	p := Params{
 		"width":  r.Width,
 		"height": r.Height,
@@ -220,12 +223,12 @@ func (c *sessionContext) SetRect(ctx context.Context, r Rect) error {
 	}
 	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/rect", p)
 	if err != nil {
-		return err
+		return winRect, err
 	}
-	if resp.Success() {
-		return nil
+	if err := json.Unmarshal(resp.Value, &winRect); err != nil {
+		return winRect, err
 	}
-	return ErrInvalidResponse
+	return winRect, nil
 }
 
 func (c *sessionContext) GetRect(ctx context.Context) (r Rect, err error) {
