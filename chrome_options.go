@@ -103,75 +103,84 @@ func ChromeOptions() *ChromeOptionsBuilder {
 	}
 }
 
-func (b *ChromeOptionsBuilder) SetBrowserName(name string) error {
-	return w3c.SetBrowserName(b.capabilities, name)
+func (b *ChromeOptionsBuilder) SetBrowserName(name string) *ChromeOptionsBuilder {
+	_ = w3c.SetBrowserName(b.capabilities, name)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetBrowserVersion(version string) error {
-	return w3c.SetBrowserVersion(b.capabilities, version)
+func (b *ChromeOptionsBuilder) SetBrowserVersion(version string) *ChromeOptionsBuilder {
+	_ = w3c.SetBrowserVersion(b.capabilities, version)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetPlatformName(platform string) error {
-	return w3c.SetPlatformName(b.capabilities, w3c.Platform(platform))
+func (b *ChromeOptionsBuilder) SetPlatformName(platform string) *ChromeOptionsBuilder {
+	_ = w3c.SetPlatformName(b.capabilities, w3c.Platform(platform))
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetAcceptInsecureCerts(flag bool) error {
-	return w3c.SetAcceptInsecureCerts(b.capabilities, flag)
+func (b *ChromeOptionsBuilder) SetAcceptInsecureCerts(flag bool) *ChromeOptionsBuilder {
+	_ = w3c.SetAcceptInsecureCerts(b.capabilities, flag)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetPageLoadStrategy(strategy string) error {
-	return w3c.SetPageLoadStrategy(b.capabilities, strategy)
+func (b *ChromeOptionsBuilder) SetPageLoadStrategy(strategy string) *ChromeOptionsBuilder {
+	_ = w3c.SetPageLoadStrategy(b.capabilities, strategy)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetWindowRect(flag bool) error {
-	return w3c.SetWindowRect(b.capabilities, flag)
+func (b *ChromeOptionsBuilder) SetWindowRect(flag bool) *ChromeOptionsBuilder {
+	_ = w3c.SetWindowRect(b.capabilities, flag)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetProxy(proxy *w3c.Proxy) error {
-	return w3c.SetProxy(b.capabilities, proxy)
+func (b *ChromeOptionsBuilder) SetProxy(proxy *w3c.Proxy) *ChromeOptionsBuilder {
+	_ = w3c.SetProxy(b.capabilities, proxy)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetUnhandledPromptBehavior(prompt string) error {
-	return w3c.SetUnhandledPromptBehavior(b.capabilities, prompt)
+func (b *ChromeOptionsBuilder) SetUnhandledPromptBehavior(prompt string) *ChromeOptionsBuilder {
+	_ = w3c.SetUnhandledPromptBehavior(b.capabilities, prompt)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetTimeout(timeout w3c.Timeout) error {
-	return w3c.SetTimeout(b.capabilities, timeout)
+func (b *ChromeOptionsBuilder) SetTimeout(timeout w3c.Timeout) *ChromeOptionsBuilder {
+	_ = w3c.SetTimeout(b.capabilities, timeout)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetDebuggerAddr(addr string) error {
-	b.chromeCapabilities.Set(ChromeCapabilityDebuggerAddressName, addr)
-	return nil
+func (b *ChromeOptionsBuilder) SetDebuggerAddr(addr string) *ChromeOptionsBuilder {
+	_ = b.chromeCapabilities.Set(ChromeCapabilityDebuggerAddressName, addr)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetDetach(flag bool) error {
-	b.chromeCapabilities.Set(ChromeCapabilityDetachName, flag)
-	return nil
+func (b *ChromeOptionsBuilder) SetDetach(flag bool) *ChromeOptionsBuilder {
+	_ = b.chromeCapabilities.Set(ChromeCapabilityDetachName, flag)
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetBinary(binPath string) error {
+func (b *ChromeOptionsBuilder) SetBinary(binPath string) *ChromeOptionsBuilder {
 	b.chromeCapabilities.Set(ChromeCapabilityBinaryName, binPath)
-	return nil
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetMiniDumpPath(path string) error {
+func (b *ChromeOptionsBuilder) SetMiniDumpPath(path string) *ChromeOptionsBuilder {
 	b.chromeCapabilities.Set(ChromeCapabilityMiniDumpPathName, path)
-	return nil
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetLocalState(key string, value interface{}) error {
+func (b *ChromeOptionsBuilder) SetLocalState(key string, value interface{}) *ChromeOptionsBuilder {
 	b.localState.Set(key, value)
-	return nil
+	return b
 }
 
-func (b *ChromeOptionsBuilder) SetPref(key string, value interface{}) error {
+func (b *ChromeOptionsBuilder) SetPref(key string, value interface{}) *ChromeOptionsBuilder {
 	b.pref.Set(key, value)
-	return nil
+	return b
 }
 
-func (b *ChromeOptionsBuilder) AddArgument(arg ...string) error {
+func (b *ChromeOptionsBuilder) AddArgument(arg ...string) *ChromeOptionsBuilder {
 	b.args = append(b.args, arg...)
-	return nil
+	return b
 }
 
 func (b *ChromeOptionsBuilder) AddExtension(base64 string) error {
@@ -182,33 +191,33 @@ func (b *ChromeOptionsBuilder) AddExtension(base64 string) error {
 	return nil
 }
 
-func (b *ChromeOptionsBuilder) AddExcludeSwitches(exclude ...string) error {
+func (b *ChromeOptionsBuilder) AddExcludeSwitches(exclude ...string) *ChromeOptionsBuilder {
 	for _, arg := range exclude {
 		if len(arg) == 0 {
 			continue
 		}
 		b.excludeSwitches = append(b.excludeSwitches, arg)
 	}
-	return nil
+	return b
 }
 
-func (b *ChromeOptionsBuilder) AddWindowTypes(types ...string) error {
+func (b *ChromeOptionsBuilder) AddWindowTypes(types ...string) *ChromeOptionsBuilder {
 	for _, arg := range types {
 		if len(arg) == 0 {
 			continue
 		}
 		b.windowTypes = append(b.windowTypes, arg)
 	}
-	return nil
+	return b
 }
 
-func (b *ChromeOptionsBuilder) AddFirstMatch(key string, value interface{}) error {
+func (b *ChromeOptionsBuilder) AddFirstMatch(key string, value interface{}) *ChromeOptionsBuilder {
 	if len(key) > 0 {
 		cap := w3c.MakeCapabilities()
 		cap.Set(key, value)
 		b.firstMatch = append(b.firstMatch, cap)
 	}
-	return nil
+	return b
 }
 
 func (b *ChromeOptionsBuilder) MobileEmulation() *MobileEmulation {
