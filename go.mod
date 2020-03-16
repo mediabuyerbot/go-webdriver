@@ -3,6 +3,7 @@ module github.com/mediabuyerbot/go-webdriver
 go 1.14
 
 require (
+	github.com/chromedp/cdproto v0.0.0-20200209033844-7e00b02ea7d2
 	github.com/gojek/valkyrie v0.0.0-20190210220504-8f62c1e7ba45
 	github.com/golang/mock v1.4.1
 	github.com/mattn/goveralls v0.0.5 // indirect
