@@ -18,6 +18,10 @@ type Browser struct {
 	driver Driver
 }
 
+func (b *Browser) WithContext(ctx context.Context) {
+	b.ctx = ctx
+}
+
 // Windows returns the list of all window handles(ids) available to the session.
 func (b *Browser) Windows() (ids []w3c.WindowHandle, err error) {
 	handles, err := b.sess.Context().GetWindowHandles(b.ctx)
@@ -36,10 +40,21 @@ func (b *Browser) ActiveWindow() (id w3c.WindowHandle, err error) {
 	return handle, nil
 }
 
-// CloseActiveWindow close the current window.
+// CloseActiveWindow closes the current window.
 func (b *Browser) CloseActiveWindow() error {
 	_, err := b.sess.Context().CloseWindow(b.ctx)
 	return err
+}
+
+// CloseWindow closes a window.
+func (b *Browser) CloseWindow(id w3c.WindowHandle) error {
+	if id.IsEmpty() {
+		return nil
+	}
+	if err := b.SwitchTo(id); err != nil {
+		return err
+	}
+	return b.CloseActiveWindow()
 }
 
 // OpenTab creates a new tab.
@@ -62,7 +77,20 @@ func (b *Browser) OpenWindow() (id w3c.WindowHandle, err error) {
 
 // SwitchTo switches between tabs or windows.
 func (b *Browser) SwitchTo(id w3c.WindowHandle) error {
+	if id.IsEmpty() {
+		return w3c.ErrUnknownWindowHandler
+	}
 	return b.sess.Context().SwitchToWindow(b.ctx, id)
+}
+
+// SwitchToFrame changes focus to another frame on the page.
+func (b *Browser) SwitchToFrame(id w3c.FrameHandle) error {
+	return b.sess.Context().SwitchToFrame(b.ctx, id)
+}
+
+// SwitchToParentFrame changes focus back to parent frame.
+func (b *Browser) SwitchToParentFrame() error {
+	return b.sess.Context().SwitchToParentFrame(b.ctx)
 }
 
 // ResizeWindow alters the size or position of the operating system window.
@@ -97,6 +125,48 @@ func (b *Browser) ResizeTo(width, height int) error {
 	rect.Height = height
 
 	if _, err := b.sess.Context().SetRect(b.ctx, rect); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ScreenSize returns a window size on the screen of the operating system.
+func (b *Browser) ScreenSize() (width int, height int, err error) {
+	rect, err := b.sess.Context().GetRect(b.ctx)
+	if err != nil {
+		return width, height, err
+	}
+	return rect.Width, rect.Height, nil
+}
+
+// ScreenPosition returns a window position on the screen of the operating system.
+func (b *Browser) ScreenPosition() (x int, y int, err error) {
+	rect, err := b.sess.Context().GetRect(b.ctx)
+	if err != nil {
+		return x, y, err
+	}
+	return rect.X, rect.Y, nil
+}
+
+// Maximize increases the window to the maximum available size without going full-screen.
+func (b *Browser) Maximize() error {
+	if _, err := b.sess.Context().Maximize(b.ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Minimize decreases the window to the minimum available size.
+func (b *Browser) Minimize() error {
+	if _, err := b.sess.Context().Minimize(b.ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Fullscreen resizes the window to full screen.
+func (b *Browser) Fullscreen() error {
+	if _, err := b.sess.Context().Fullscreen(b.ctx); err != nil {
 		return err
 	}
 	return nil

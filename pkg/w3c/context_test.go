@@ -126,25 +126,32 @@ func TestSessionContext_Maximize(t *testing.T) {
 	// returns success
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/maximize", nil).Times(1).Return(
 		&Response{
-			Value: []byte(`null`),
+			Value: []byte(`{"height":1050,"width":1626,"x":0,"y":0}`),
 		}, nil)
-	err := cx.Maximize(ctx)
+	rect, err := cx.Maximize(ctx)
 	assert.Nil(t, err)
+	assert.Equal(t, 1050, rect.Height)
+	assert.Equal(t, 1626, rect.Width)
+	assert.Equal(t, 0, rect.X)
+	assert.Equal(t, 0, rect.Y)
 
 	// returns error
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/maximize", nil).Times(1).Return(nil,
 		contextErr)
-	err = cx.Maximize(ctx)
+	_, err = cx.Maximize(ctx)
 	assert.Error(t, err)
 
-	// returns error (invalid response)
+	// returns empty response
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/maximize", nil).Times(1).Return(
 		&Response{
 			Value: []byte(`{}`),
 		}, nil)
-	err = cx.Maximize(ctx)
-	assert.Error(t, err)
-	assert.Equal(t, err, ErrInvalidResponse)
+	rect, err = cx.Maximize(ctx)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, rect.Height)
+	assert.Equal(t, 0, rect.Width)
+	assert.Equal(t, 0, rect.X)
+	assert.Equal(t, 0, rect.Y)
 }
 
 func TestSessionContext_Minimize(t *testing.T) {
@@ -156,15 +163,19 @@ func TestSessionContext_Minimize(t *testing.T) {
 	// returns success
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/minimize", nil).Times(1).Return(
 		&Response{
-			Value: []byte(`null`),
+			Value: []byte(`{"height":1050,"width":1626,"x":0,"y":0}`),
 		}, nil)
-	err := cx.Minimize(ctx)
+	rect, err := cx.Minimize(ctx)
 	assert.Nil(t, err)
+	assert.Equal(t, 1050, rect.Height)
+	assert.Equal(t, 1626, rect.Width)
+	assert.Equal(t, 0, rect.X)
+	assert.Equal(t, 0, rect.Y)
 
 	// returns error
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window/minimize", nil).Times(1).Return(nil,
 		contextErr)
-	err = cx.Minimize(ctx)
+	_, err = cx.Minimize(ctx)
 	assert.Error(t, err)
 
 	// returns error (invalid response)
@@ -172,9 +183,12 @@ func TestSessionContext_Minimize(t *testing.T) {
 		&Response{
 			Value: []byte(`{}`),
 		}, nil)
-	err = cx.Minimize(ctx)
-	assert.Error(t, err)
-	assert.Equal(t, err, ErrInvalidResponse)
+	rect, err = cx.Minimize(ctx)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, rect.Height)
+	assert.Equal(t, 0, rect.Width)
+	assert.Equal(t, 0, rect.X)
+	assert.Equal(t, 0, rect.Y)
 }
 
 func TestSessionContext_GetRect(t *testing.T) {
@@ -339,19 +353,19 @@ func TestSessionContext_GetWindowHandle(t *testing.T) {
 	ctx := context.TODO()
 
 	// returns success
-	botWindowHandle := WindowHandle("CDwindow-1BCAB31FFE62561727B38152C27A7B88")
+	want := WindowHandle("CDwindow-1BCAB31FFE62561727B38152C27A7B88")
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window", nil).Times(1).Return(
 		&Response{
-			Value: []byte(botWindowHandle),
+			Value: []byte(`"CDwindow-1BCAB31FFE62561727B38152C27A7B88"`),
 		}, nil)
-	handle, err := cx.GetWindowHandle(ctx)
+	got, err := cx.GetWindowHandle(ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, handle, botWindowHandle)
+	assert.Equal(t, want, got)
 
 	// returns error
 	cli.EXPECT().Do(ctx, http.MethodGet, "/session/123/window", nil).Times(1).Return(nil, contextErr)
-	handle, err = cx.GetWindowHandle(ctx)
-	assert.Empty(t, handle)
+	got, err = cx.GetWindowHandle(ctx)
+	assert.Empty(t, got)
 	assert.Error(t, err)
 }
 
@@ -441,7 +455,7 @@ func TestSessionContext_SwitchToWindow(t *testing.T) {
 	botWindowHandle := WindowHandle("CDwindow-5B07A00849E4B4DB05A83B074747A172")
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/window", gomock.Any()).Times(1).Return(
 		&Response{Value: []byte(`null`)}, nil).Do(func(_ context.Context, method string, path string, p Params) {
-		assert.Equal(t, p["name"], botWindowHandle)
+		assert.Equal(t, p["handle"], botWindowHandle)
 	})
 	err := cx.SwitchToWindow(ctx, botWindowHandle)
 	assert.Nil(t, err)

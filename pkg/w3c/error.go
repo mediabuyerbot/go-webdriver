@@ -7,8 +7,9 @@ import (
 )
 
 var (
-	ErrInvalidResponse  = errors.New("protocol: invalid response")
-	ErrInvalidArguments = errors.New("protocol: invalid arguments")
+	ErrInvalidResponse      = errors.New("w3c: invalid response")
+	ErrInvalidArguments     = errors.New("w3c: invalid arguments")
+	ErrUnknownWindowHandler = errors.New("w3c: unknown window handler")
 )
 
 // Error represents a WebDriver protocol error.
@@ -26,6 +27,10 @@ func (e Error) Error() string {
 		e.Code,
 		e.Message,
 	)
+}
+
+func IsUnknownWindowHandler(err error) bool {
+	return ErrUnknownWindowHandler == err
 }
 
 func parseError(respStatusCode int, resp *Response) error {

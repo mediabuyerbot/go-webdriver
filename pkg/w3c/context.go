@@ -44,12 +44,12 @@ type Context interface {
 	// Maximize invokes the window manager-specific “maximize” operation,
 	// if any, on the window containing the current top-level browsing context.
 	// This typically increases the window to the maximum available size without going full-screen.
-	Maximize(context.Context) error
+	Maximize(context.Context) (Rect, error)
 
 	// Minimize invokes the window manager-specific “minimize” operation,
 	// if any, on the window containing the current top-level browsing context.
 	// This typically hides the window in the system tray.
-	Minimize(context.Context) error
+	Minimize(context.Context) (Rect, error)
 
 	// Fullscreen fullscreen mode.
 	Fullscreen(context.Context) (Rect, error)
@@ -68,6 +68,10 @@ type (
 
 func (wh WindowHandle) String() string {
 	return string(wh)
+}
+
+func (wh WindowHandle) IsEmpty() bool {
+	return len(wh) == 0
 }
 
 func (wt WindowType) String() string {
@@ -242,26 +246,26 @@ func (c *sessionContext) GetRect(ctx context.Context) (r Rect, err error) {
 	return r, nil
 }
 
-func (c *sessionContext) Maximize(ctx context.Context) error {
+func (c *sessionContext) Maximize(ctx context.Context) (r Rect, err error) {
 	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/maximize", nil)
 	if err != nil {
-		return err
+		return r, err
 	}
-	if resp.Success() {
-		return nil
+	if err := json.Unmarshal(resp.Value, &r); err != nil {
+		return r, err
 	}
-	return ErrInvalidResponse
+	return r, nil
 }
 
-func (c *sessionContext) Minimize(ctx context.Context) error {
+func (c *sessionContext) Minimize(ctx context.Context) (r Rect, err error) {
 	resp, err := c.request.Do(ctx, http.MethodPost, "/session/"+c.id+"/window/minimize", nil)
 	if err != nil {
-		return err
+		return r, err
 	}
-	if resp.Success() {
-		return nil
+	if err := json.Unmarshal(resp.Value, &r); err != nil {
+		return r, err
 	}
-	return ErrInvalidResponse
+	return r, nil
 }
 
 func (c *sessionContext) Fullscreen(ctx context.Context) (r Rect, err error) {
