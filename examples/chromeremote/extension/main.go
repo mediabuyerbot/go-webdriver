@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	// load extension
+	// load extension from local path
 	ext, err := webdriver.LoadChromeExtension("./extension.crx")
 	if err != nil {
 		exitWithError(err)
@@ -19,8 +19,8 @@ func main() {
 	// add extension
 	_ = opts.AddExtension(ext)
 
-	// run chrome
-	browser, err := webdriver.Chrome(opts)
+	// creates a new instance of the remote browser
+	browser, err := webdriver.Remote("http://localhost:9515", opts.Build())
 	if err != nil {
 		exitWithError(err)
 	}

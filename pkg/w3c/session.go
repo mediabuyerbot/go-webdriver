@@ -59,6 +59,10 @@ func (s Status) HasExtensionInfo() bool {
 // The new session command creates a new WebDriver session with the endpoint node. If the creation fails,
 // a session not created error is returned.
 func NewSession(request Doer, opts BrowserOptions) (Session, error) {
+	if opts == nil {
+		opts = NewBrowserOptions(nil, nil)
+	}
+
 	browserOptions := Params{}
 
 	if opts.AlwaysMatch() != nil && len(opts.AlwaysMatch()) > 0 {

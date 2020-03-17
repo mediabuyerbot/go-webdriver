@@ -8,7 +8,7 @@ import (
 // Navigation represents a navigation of the current session context
 type Navigation interface {
 
-	// NavigateTo navigate to a new URL.
+	// NavigateTo navigates to a new URL.
 	NavigateTo(ctx context.Context, url string) (err error)
 
 	// GetCurrentURL returns the URL of the current page.

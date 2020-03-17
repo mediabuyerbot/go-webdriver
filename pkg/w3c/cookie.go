@@ -41,13 +41,13 @@ type Cookies interface {
 	// Get returns a cookie by name visible to the current page.
 	Get(context.Context, string) (Cookie, error)
 
-	// Add add a cookie.
+	// Add adds a cookie.
 	Add(context.Context, Cookie) error
 
-	// Delete delete cookies by name visible to the current page.
+	// Delete deletes cookies by name visible to the current page.
 	Delete(context.Context, string) error
 
-	// DeleteAll delete all cookies visible to the current page.
+	// DeleteAll deletes all cookies visible to the current page.
 	DeleteAll(context.Context) error
 }
 

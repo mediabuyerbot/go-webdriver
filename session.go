@@ -54,7 +54,7 @@ func (b *Session) SessionID() string {
 	return b.session.ID()
 }
 
-// ScreenshotPNG take a screenshot of the current page.
+// ScreenshotPNG takes a screenshot of the current page.
 func (b *Session) ScreenshotPNG(ctx context.Context) (image.Image, error) {
 	reader, err := b.screenCapture.Take(ctx)
 	if err != nil {
@@ -63,7 +63,7 @@ func (b *Session) ScreenshotPNG(ctx context.Context) (image.Image, error) {
 	return png.Decode(reader)
 }
 
-// ScreenshotJPG take a screenshot of the current page.
+// ScreenshotJPG takes a screenshot of the current page.
 func (b *Session) ScreenshotJPG(ctx context.Context) (image.Image, error) {
 	reader, err := b.screenCapture.Take(ctx)
 	if err != nil {

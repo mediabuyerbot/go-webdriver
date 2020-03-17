@@ -2,7 +2,10 @@ package webdriver
 
 import (
 	"context"
+	"image"
+	"io"
 	"net"
+	"time"
 
 	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
 )
@@ -20,6 +23,135 @@ type Browser struct {
 
 func (b *Browser) WithContext(ctx context.Context) {
 	b.ctx = ctx
+}
+
+// UID returns the unique browser id.
+func (b *Browser) UID() string {
+	return b.sess.Session().ID()
+}
+
+// Execute inject a snippet of JavaScript into the page for execution in the context of the currently
+// selected frame. The executed script is assumed to be synchronous and the result of evaluating the script
+// is returned to the client. The script argument defines the script to execute in the form of a function body.
+// The value returned by that function will be returned to the client. The function will be invoked with
+// the provided args array and the values may be accessed via the arguments object in the order specified.
+// Arguments may be any JSON-primitive, array, or JSON object.
+func (b *Browser) Execute(script string, args []interface{}) ([]byte, error) {
+	return b.sess.Document().ExecuteScript(b.ctx, script, args)
+}
+
+// ExecuteAsync inject a snippet of JavaScript into the page for execution in the context of the
+// currently selected frame. The executed script is assumed to be asynchronous and must signal that
+// is done by invoking the provided callback, which is always provided as the final argument to the function.
+// The value to this callback will be returned to the client. Asynchronous script commands may not span page loads.
+// If an unload event is fired while waiting for a script result, an error should be returned to the client.
+// The script argument defines the script to execute in teh form of a function body. The function will be invoked
+// with the provided args array and the values may be accessed via the arguments object in the order specified.
+// The final argument will always be a callback function that must be invoked to signal that the script has finished.
+// Arguments may be any JSON-primitive, array, or JSON object.
+func (b *Browser) ExecuteAsync(script string, args []interface{}) ([]byte, error) {
+	return b.sess.Document().ExecuteAsyncScript(b.ctx, script, args)
+}
+
+// Source returns a string serialization of the DOM of the current browsing context active document.
+func (b *Browser) Source() (source string, err error) {
+	return b.sess.Document().GetPageSource(b.ctx)
+}
+
+// Cookies returns an all cookies visible to the current page.
+func (b *Browser) Cookies() ([]w3c.Cookie, error) {
+	return b.sess.Cookies().All(b.ctx)
+}
+
+// GetCookie returns a cookie by name visible to the current page.
+func (b *Browser) GetCookie(name string) (w3c.Cookie, error) {
+	return b.sess.Cookies().Get(b.ctx, name)
+}
+
+// AddCookie adds a cookie.
+func (b *Browser) AddCookie(c w3c.Cookie) error {
+	return b.sess.Cookies().Add(b.ctx, c)
+}
+
+// DeleteCookie deletes cookies by name visible to the current page.
+func (b *Browser) DeleteCookie(name string) error {
+	return b.sess.Cookies().Delete(b.ctx, name)
+}
+
+// DeleteCookies deletes all cookies visible to the current page.
+func (b *Browser) DeleteCookies() error {
+	return b.sess.Cookies().DeleteAll(b.ctx)
+}
+
+// NavigateTo navigates to a new URL.
+func (b *Browser) NavigateTo(u string) error {
+	return b.sess.Navigation().NavigateTo(b.ctx, u)
+}
+
+// Url  navigates to a new URL (alias for NavigateTo).
+func (b *Browser) Url(u string) error {
+	return b.sess.Navigation().NavigateTo(b.ctx, u)
+}
+
+// CurrentURL returns the URL of the current page.
+func (b *Browser) CurrentURL() (url string, err error) {
+	return b.sess.Navigation().GetCurrentURL(b.ctx)
+}
+
+// Back navigate backwards in the browser history, if possible.
+func (b *Browser) Back() error {
+	return b.sess.Navigation().Back(b.ctx)
+}
+
+// Refresh refresh the current page.
+func (b *Browser) Refresh(ctx context.Context) error {
+	return b.sess.Navigation().Refresh(b.ctx)
+}
+
+// Title returns the current page title.
+func (b *Browser) Title(ctx context.Context) (title string, err error) {
+	return b.sess.Navigation().GetTitle(b.ctx)
+}
+
+// Forward navigate forwards in the browser history, if possible.
+func (b *Browser) Forward() error {
+	return b.sess.Navigation().Forward(b.ctx)
+}
+
+// GetTimeout returns the timeouts implicit, pageLoad, script.
+func (b *Browser) GetTimeout() (w3c.Timeout, error) {
+	return b.sess.Timeouts().Get(b.ctx)
+}
+
+// SetImplicitTimeout sets the amount of time the browser should wait when
+// searching for elements. The timeout will be rounded to nearest millisecond.
+func (b *Browser) SetImplicitTimeout(d time.Duration) error {
+	return b.sess.Timeouts().SetImplicit(b.ctx, d)
+}
+
+// SetPageLoadTimeout sets the amount of time the browser should wait when
+// loading a page. The timeout will be rounded to nearest millisecond.
+func (b *Browser) SetPageLoadTimeout(d time.Duration) error {
+	return b.sess.Timeouts().SetPageLoad(b.ctx, d)
+}
+
+// SetScriptTimeout sets the amount of time that asynchronous scripts
+// are permitted to run before they are aborted. The timeout will be rounded
+// to nearest millisecond.
+func (b *Browser) SetScriptTimeout(d time.Duration) error {
+	return b.sess.Timeouts().SetScript(b.ctx, d)
+}
+
+// Capabilities returns the browser capabilities.
+func (b *Browser) Capabilities() w3c.Capabilities {
+	return b.sess.Session().Capabilities()
+}
+
+// Status returns information about whether a browser  is in a state
+// in which it can create new sessions, but may additionally include arbitrary
+// meta information that is specific to the implementation.
+func (b *Browser) Status() (w3c.Status, error) {
+	return b.sess.Session().Status(b.ctx)
 }
 
 // Windows returns the list of all window handles(ids) available to the session.
@@ -170,6 +302,26 @@ func (b *Browser) Fullscreen() error {
 		return err
 	}
 	return nil
+}
+
+// ScreenshotJPG takes a screenshot of the current page.
+func (b *Browser) ScreenshotJPG() (image.Image, error) {
+	return b.sess.ScreenshotJPG(b.ctx)
+}
+
+// ScreenshotPNG takes a screenshot of the current page.
+func (b *Browser) ScreenshotPNG() (image.Image, error) {
+	return b.sess.ScreenshotPNG(b.ctx)
+}
+
+// Screenshot takes a screenshot of the current page.
+func (b *Browser) Screenshot() (io.Reader, error) {
+	return b.sess.ScreenCapture().Take(b.ctx)
+}
+
+// ElementScreenshot takes a screenshot of the element on the current page.
+func (b *Browser) ElementScreenshot(elementID string) (io.Reader, error) {
+	return b.sess.ScreenCapture().TakeElement(b.ctx, elementID)
 }
 
 func (b *Browser) Close() error {

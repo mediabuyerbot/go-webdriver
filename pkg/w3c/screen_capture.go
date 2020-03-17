@@ -10,10 +10,10 @@ import (
 
 type ScreenCapture interface {
 
-	// Take take a screenshot of the current page.
+	// Take takes a screenshot of the current page.
 	Take(ctx context.Context) (io.Reader, error)
 
-	// TakeElement take a screenshot of the element on the current page.
+	// TakeElement takes a screenshot of the element on the current page.
 	TakeElement(ctx context.Context, elementID string) (io.Reader, error)
 }
 
