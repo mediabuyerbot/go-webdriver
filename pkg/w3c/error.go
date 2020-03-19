@@ -10,6 +10,7 @@ var (
 	ErrInvalidResponse      = errors.New("w3c: invalid response")
 	ErrInvalidArguments     = errors.New("w3c: invalid arguments")
 	ErrUnknownWindowHandler = errors.New("w3c: unknown window handler")
+	ErrNoSuchElement        = errors.New("w3c: no such element")
 )
 
 // Error represents a WebDriver protocol error.

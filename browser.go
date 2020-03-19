@@ -5,6 +5,7 @@ import (
 	"image"
 	"io"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
@@ -152,6 +153,45 @@ func (b *Browser) Capabilities() w3c.Capabilities {
 // meta information that is specific to the implementation.
 func (b *Browser) Status() (w3c.Status, error) {
 	return b.sess.Session().Status(b.ctx)
+}
+
+// FindElementByID finds an element on the page, starting from the document root.
+func (b *Browser) FindElementByID(id string) (we WebElement, err error) {
+	if !strings.HasPrefix(id, "#") {
+		id = "#" + id
+	}
+	w3cWebElem, err := b.sess.Elements().FindOne(b.ctx, w3c.ByCSSSelector, id)
+	if err != nil {
+		return we, err
+	}
+	return WebElement{
+		elem: w3cWebElem,
+		ctx:  b.ctx,
+	}, nil
+}
+
+// FindElementByXPATH finds an element on the page, starting from the document root.
+func (b *Browser) FindElementByXPATH(xpath string) (we WebElement, err error) {
+	w3cWebElem, err := b.sess.Elements().FindOne(b.ctx, w3c.ByXPATH, xpath)
+	if err != nil {
+		return we, err
+	}
+	return WebElement{
+		elem: w3cWebElem,
+		ctx:  b.ctx,
+	}, nil
+}
+
+// FindElementByLinkText finds an element on the page, starting from the document root.
+func (b *Browser) FindElementByLinkText(text string) (we WebElement, err error) {
+	w3cWebElem, err := b.sess.Elements().FindOne(b.ctx, w3c.ByLinkText, text)
+	if err != nil {
+		return we, err
+	}
+	return WebElement{
+		elem: w3cWebElem,
+		ctx:  b.ctx,
+	}, nil
 }
 
 // Windows returns the list of all window handles(ids) available to the session.

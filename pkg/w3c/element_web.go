@@ -6,7 +6,13 @@ import (
 	"net/http"
 )
 
+// WebElementIdentifier the web element identifier is the string constant.
+const WebElementIdentifier = "element-6066-11e4-a52e-4f735466cecf"
+
 type WebElement interface {
+
+	// ID returns the identifier of the element.
+	ID() string
 
 	// Click clicks on the element.
 	Click(ctx context.Context) error
@@ -57,6 +63,10 @@ type webElement struct {
 	wid     string
 	sid     string
 	request Doer
+}
+
+func (w webElement) ID() string {
+	return w.wid
 }
 
 // Click clicks on the element.
@@ -118,8 +128,12 @@ func (w webElement) FindOne(ctx context.Context, by FindElementStrategy, value s
 	if err := json.Unmarshal(resp.Value, &er); err != nil {
 		return nil, err
 	}
+	id, ok := er.ID()
+	if !ok {
+		return nil, ErrNoSuchElement
+	}
 	return webElement{
-		wid:     er.ID,
+		wid:     id,
 		sid:     w.sid,
 		request: w.request,
 	}, nil
@@ -144,8 +158,12 @@ func (w webElement) Find(ctx context.Context, by FindElementStrategy, value stri
 	}
 	webElements := make([]WebElement, len(elms))
 	for i, wid := range elms {
+		id, ok := wid.ID()
+		if !ok {
+			return nil, ErrNoSuchElement
+		}
 		webElements[i] = webElement{
-			wid:     wid.ID,
+			wid:     id,
 			sid:     w.sid,
 			request: w.request,
 		}

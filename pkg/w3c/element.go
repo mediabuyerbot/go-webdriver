@@ -109,8 +109,11 @@ type Elements interface {
 	Active(ctx context.Context) (WebElement, error)
 }
 
-type elemResp struct {
-	ID string `json:"ELEMENT"`
+type elemResp map[string]string
+
+func (er elemResp) ID() (s string, ok bool) {
+	s, ok = er[WebElementIdentifier]
+	return
 }
 
 type elements struct {
@@ -130,8 +133,8 @@ func (e *elements) FindOne(ctx context.Context, by FindElementStrategy, value st
 		return nil, ErrInvalidArguments
 	}
 	p := Params{
-		"using": by,
 		"value": value,
+		"using": by,
 	}
 	resp, err := e.request.Do(ctx, http.MethodPost, "/session/"+e.id+"/element", p)
 	if err != nil {
@@ -141,8 +144,12 @@ func (e *elements) FindOne(ctx context.Context, by FindElementStrategy, value st
 	if err := json.Unmarshal(resp.Value, &er); err != nil {
 		return nil, err
 	}
+	id, ok := er.ID()
+	if !ok {
+		return nil, ErrNoSuchElement
+	}
 	return webElement{
-		wid:     er.ID,
+		wid:     id,
 		sid:     e.id,
 		request: e.request,
 	}, nil
@@ -153,8 +160,8 @@ func (e *elements) Find(ctx context.Context, by FindElementStrategy, value strin
 		return nil, ErrInvalidArguments
 	}
 	p := Params{
-		"using": by,
 		"value": value,
+		"using": by,
 	}
 	resp, err := e.request.Do(ctx, http.MethodPost, "/session/"+e.id+"/elements", p)
 	if err != nil {
@@ -166,8 +173,12 @@ func (e *elements) Find(ctx context.Context, by FindElementStrategy, value strin
 	}
 	webElements := make([]WebElement, len(elms))
 	for i, wid := range elms {
+		id, ok := wid.ID()
+		if !ok {
+			return nil, ErrNoSuchElement
+		}
 		webElements[i] = webElement{
-			wid:     wid.ID,
+			wid:     id,
 			sid:     e.id,
 			request: e.request,
 		}
@@ -184,8 +195,12 @@ func (e *elements) Active(ctx context.Context) (WebElement, error) {
 	if err := json.Unmarshal(resp.Value, &er); err != nil {
 		return nil, err
 	}
+	id, ok := er.ID()
+	if !ok {
+		return nil, ErrNoSuchElement
+	}
 	return webElement{
-		wid:     er.ID,
+		wid:     id,
 		sid:     e.id,
 		request: e.request,
 	}, nil
