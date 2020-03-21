@@ -41,6 +41,21 @@ func TestNavigation_NavigateTo(t *testing.T) {
 	err := navigation.NavigateTo(ctx, botURL)
 	assert.Nil(t, err)
 
+	// returns success - addr without scheme (http, https, ...)
+	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/url", gomock.Any()).Times(1).Return(
+		&Response{
+			SessionID: "123",
+			Value:     []byte(`null`),
+		}, nil).Do(func(_ context.Context, method string, p string, params map[string]interface{}) {
+		assert.Equal(t, "http://0.0.0.0:9090", params["url"])
+	})
+	err = navigation.NavigateTo(ctx, "0.0.0.0:9090")
+	assert.Nil(t, err)
+
+	// returns error url is empty
+	err = navigation.NavigateTo(ctx, "")
+	assert.Error(t, err)
+
 	// returns error
 	cli.EXPECT().Do(ctx, http.MethodPost, "/session/123/url", gomock.Any()).Times(1).Return(
 		&Response{

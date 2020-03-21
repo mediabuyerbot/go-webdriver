@@ -87,7 +87,7 @@ func (w webElement) SendKeys(ctx context.Context, keys ...Key) error {
 		return ErrInvalidArguments
 	}
 	p := Params{
-		"value": keys,
+		"text": keys,
 	}
 	resp, err := w.request.Do(ctx, http.MethodPost, "/session/"+w.sid+"/element/"+w.wid+"/value", p)
 	if err != nil {
@@ -208,12 +208,15 @@ func (w webElement) IsEnabled(ctx context.Context) (bool, error) {
 }
 
 // GetAttribute returns the named attribute of the element.
-func (w webElement) GetAttribute(ctx context.Context, name string) (string, error) {
+func (w webElement) GetAttribute(ctx context.Context, name string) (s string, err error) {
 	resp, err := w.request.Do(ctx, http.MethodGet, "/session/"+w.sid+"/element/"+w.wid+"/attribute/"+name, nil)
 	if err != nil {
-		return "", err
+		return s, err
 	}
-	return string(resp.Value), nil
+	if err = json.Unmarshal(resp.Value, &s); err != nil {
+		return s, err
+	}
+	return s, nil
 }
 
 // GetProperty returns the value of the specified property of the element.

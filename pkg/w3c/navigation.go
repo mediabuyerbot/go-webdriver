@@ -2,7 +2,9 @@ package w3c
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 // Navigation represents a navigation of the current session context
@@ -41,6 +43,12 @@ func NewNavigation(doer Doer, sessID string) Navigation {
 }
 
 func (n *navigation) NavigateTo(ctx context.Context, url string) (err error) {
+	if len(url) == 0 {
+		return fmt.Errorf("%v, url is empty", ErrInvalidArguments)
+	}
+	if !strings.HasPrefix(url, "http") {
+		url = "http://" + url
+	}
 	resp, err := n.request.Do(ctx, http.MethodPost, "/session/"+n.id+"/url", Params{"url": url})
 	if err != nil {
 		return err

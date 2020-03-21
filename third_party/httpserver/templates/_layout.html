@@ -1,0 +1,21 @@
+{{define "layout"}}
+    <!doctype html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Go WebDriver - {{template "title"}}</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    <body>
+    {{template "body"}}
+    <footer class="my-5 pt-5 text-muted text-center text-small">
+        <p class="mb-1">&copy; Mediabuyerbot.com </p>
+        <ul class="list-inline">
+            <li class="list-inline-item"> <a href="https://mediabuyerbot.com" target="_blank">https://mediabuyerbot.com</a> </li>
+            <li class="list-inline-item"><a href="https://github.com/mediabuyerbot/go-webdriver" target="_blank">go-webdriver</a></li>
+        </ul>
+    </footer>
+    </body>
+    </html>
+{{end}}

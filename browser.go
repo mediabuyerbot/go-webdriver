@@ -157,6 +157,9 @@ func (b *Browser) Status() (w3c.Status, error) {
 
 // FindElementByID finds an element on the page, starting from the document root.
 func (b *Browser) FindElementByID(id string) (we WebElement, err error) {
+	if len(id) == 0 {
+		return we, w3c.ErrInvalidArguments
+	}
 	if !strings.HasPrefix(id, "#") {
 		id = "#" + id
 	}
@@ -167,6 +170,10 @@ func (b *Browser) FindElementByID(id string) (we WebElement, err error) {
 	return WebElement{
 		elem: w3cWebElem,
 		ctx:  b.ctx,
+		q: selector{
+			id:       id,
+			strategy: w3c.ByCSSSelector,
+		},
 	}, nil
 }
 
@@ -179,6 +186,10 @@ func (b *Browser) FindElementByXPATH(xpath string) (we WebElement, err error) {
 	return WebElement{
 		elem: w3cWebElem,
 		ctx:  b.ctx,
+		q: selector{
+			id:       xpath,
+			strategy: w3c.ByXPATH,
+		},
 	}, nil
 }
 
@@ -191,6 +202,10 @@ func (b *Browser) FindElementByLinkText(text string) (we WebElement, err error) 
 	return WebElement{
 		elem: w3cWebElem,
 		ctx:  b.ctx,
+		q: selector{
+			id:       text,
+			strategy: w3c.ByLinkText,
+		},
 	}, nil
 }
 
