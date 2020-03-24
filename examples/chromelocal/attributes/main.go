@@ -21,6 +21,7 @@ func main() {
 	if err != nil {
 		exitWithError(err)
 	}
+
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("panic:", err)

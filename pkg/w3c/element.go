@@ -4,139 +4,128 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
-type FindElementStrategy string
+// WebElementIdentifier the web element identifier is the string constant.
+const WebElementIdentifier = "element-6066-11e4-a52e-4f735466cecf"
 
-// Methods by which to find elements.
-const (
-	// Returns an element whose ID attribute matches the search value.
-	ByID = FindElementStrategy("id")
+type WebElement interface {
 
-	// Returns an element matching an XPath expression.
-	ByXPATH = FindElementStrategy("xpath")
+	// ID returns the identifier of the element.
+	ID() string
 
-	// Returns an anchor element whose visible text matches the search value.
-	ByLinkText = FindElementStrategy("link text")
+	// Click clicks on the element.
+	Click(ctx context.Context) error
 
-	// Returns an anchor element whose visible text partially matches the search value.
-	ByPartialLinkText = FindElementStrategy("partial link text")
+	// SendKeys types into the element.
+	SendKeys(ctx context.Context, keys ...Key) error
 
-	// Returns an element whose NAME attribute matches the search value.
-	ByName = FindElementStrategy("name")
+	// Clear clears the element.
+	Clear(ctx context.Context) error
 
-	// Returns an element whose tag name matches the search value.
-	ByTagName = FindElementStrategy("tag name")
-
-	// Returns an element whose class name contains the search value.
-	// Compound class names are not permitted.
-	ByClassName = FindElementStrategy("class name")
-
-	// Returns an element matching a CSS selector.
-	ByCSSSelector = FindElementStrategy("css selector")
-)
-
-type Key string
-
-// Special keyboard keys, for SendKeys.
-const (
-	NullKey       = Key('\ue000')
-	CancelKey     = Key('\ue001')
-	HelpKey       = Key('\ue002')
-	BackspaceKey  = Key('\ue003')
-	TabKey        = Key('\ue004')
-	ClearKey      = Key('\ue005')
-	ReturnKey     = Key('\ue006')
-	EnterKey      = Key('\ue007')
-	ShiftKey      = Key('\ue008')
-	ControlKey    = Key('\ue009')
-	AltKey        = Key('\ue00a')
-	PauseKey      = Key('\ue00b')
-	EscapeKey     = Key('\ue00c')
-	SpaceKey      = Key('\ue00d')
-	PageUpKey     = Key('\ue00e')
-	PageDownKey   = Key('\ue00f')
-	EndKey        = Key('\ue010')
-	HomeKey       = Key('\ue011')
-	LeftArrowKey  = Key('\ue012')
-	UpArrowKey    = Key('\ue013')
-	RightArrowKey = Key('\ue014')
-	DownArrowKey  = Key('\ue015')
-	InsertKey     = Key('\ue016')
-	DeleteKey     = Key('\ue017')
-	SemicolonKey  = Key('\ue018')
-	EqualsKey     = Key('\ue019')
-	Numpad0Key    = Key('\ue01a')
-	Numpad1Key    = Key('\ue01b')
-	Numpad2Key    = Key('\ue01c')
-	Numpad3Key    = Key('\ue01d')
-	Numpad4Key    = Key('\ue01e')
-	Numpad5Key    = Key('\ue01f')
-	Numpad6Key    = Key('\ue020')
-	Numpad7Key    = Key('\ue021')
-	Numpad8Key    = Key('\ue022')
-	Numpad9Key    = Key('\ue023')
-	MultiplyKey   = Key('\ue024')
-	AddKey        = Key('\ue025')
-	SeparatorKey  = Key('\ue026')
-	SubstractKey  = Key('\ue027')
-	DecimalKey    = Key('\ue028')
-	DivideKey     = Key('\ue029')
-	F1Key         = Key('\ue031')
-	F2Key         = Key('\ue032')
-	F3Key         = Key('\ue033')
-	F4Key         = Key('\ue034')
-	F5Key         = Key('\ue035')
-	F6Key         = Key('\ue036')
-	F7Key         = Key('\ue037')
-	F8Key         = Key('\ue038')
-	F9Key         = Key('\ue039')
-	F10Key        = Key('\ue03a')
-	F11Key        = Key('\ue03b')
-	F12Key        = Key('\ue03c')
-	MetaKey       = Key('\ue03d')
-)
-
-type Elements interface {
-
-	// FindOne finds an element on the page, starting from the document root.
+	// FindOne finds a child element.
 	FindOne(ctx context.Context, by FindElementStrategy, value string) (WebElement, error)
 
-	// Find finds multiple elements on the page, starting from the document root.
+	// Find finds multiple children elements.
 	Find(ctx context.Context, by FindElementStrategy, value string) ([]WebElement, error)
 
-	// Active returns the currently active element on the page.
-	Active(ctx context.Context) (WebElement, error)
+	// TagName returns the element's name.
+	TagName(ctx context.Context) (string, error)
+
+	// Text returns the text of the element.
+	Text(ctx context.Context) (string, error)
+
+	// IsSelected returns true if element is selected.
+	IsSelected(ctx context.Context) (bool, error)
+
+	// IsEnabled returns true if the element is enabled.
+	IsEnabled(ctx context.Context) (bool, error)
+
+	// GetAttribute returns the named attribute of the element.
+	GetAttribute(ctx context.Context, name string) (string, error)
+
+	// Rect returns the element's size.
+	Rect(ctx context.Context) (Rect, error)
+
+	// GetProperty returns the value of the specified property of the element.
+	GetProperty(ctx context.Context, name string) (string, error)
+
+	// GetCSSValue returns the value of the specified CSS property of the element.
+	GetCSSValue(ctx context.Context, name string) (string, error)
 }
 
-type elemResp map[string]string
-
-func (er elemResp) ID() (s string, ok bool) {
-	s, ok = er[WebElementIdentifier]
-	return
+// Point is a 2D point.
+type Point struct {
+	X, Y int
 }
 
-type elements struct {
-	id      string
+type webElement struct {
+	wid     string
+	sid     string
 	request Doer
 }
 
-func NewElements(doer Doer, sessID string) Elements {
-	return &elements{
-		id:      sessID,
-		request: doer,
-	}
+func (w webElement) ID() string {
+	return w.wid
 }
 
-func (e *elements) FindOne(ctx context.Context, by FindElementStrategy, value string) (WebElement, error) {
+// Click clicks on the element.
+func (w webElement) Click(ctx context.Context) error {
+	resp, err := w.request.Do(ctx, http.MethodPost, "/session/"+w.sid+"/element/"+w.wid+"/click", nil)
+	if err != nil {
+		return err
+	}
+	if resp.Success() {
+		return nil
+	}
+	return ErrInvalidResponse
+}
+
+// SendKeys types into the element.
+func (w webElement) SendKeys(ctx context.Context, keys ...Key) error {
+	if len(keys) == 0 {
+		return ErrInvalidArguments
+	}
+	str := make([]string, len(keys))
+	for i, k := range keys {
+		str[i] = string(k)
+	}
+	p := Params{
+		"text": strings.Join(str, " "),
+	}
+	resp, err := w.request.Do(ctx, http.MethodPost, "/session/"+w.sid+"/element/"+w.wid+"/value", p)
+	if err != nil {
+		return err
+	}
+	if resp.Success() {
+		return nil
+	}
+	return ErrInvalidResponse
+}
+
+// Clear clears the element.
+func (w webElement) Clear(ctx context.Context) error {
+	resp, err := w.request.Do(ctx, http.MethodPost, "/session/"+w.sid+"/element/"+w.wid+"/clear", nil)
+	if err != nil {
+		return err
+	}
+	if resp.Success() {
+		return nil
+	}
+	return ErrInvalidResponse
+}
+
+// FindOne finds a child element.
+func (w webElement) FindOne(ctx context.Context, by FindElementStrategy, value string) (WebElement, error) {
 	if len(value) == 0 {
 		return nil, ErrInvalidArguments
 	}
 	p := Params{
-		"value": value,
 		"using": by,
+		"value": value,
 	}
-	resp, err := e.request.Do(ctx, http.MethodPost, "/session/"+e.id+"/element", p)
+	resp, err := w.request.Do(ctx, http.MethodPost, "/session/"+w.sid+"/element/"+w.wid+"/element", p)
 	if err != nil {
 		return nil, err
 	}
@@ -150,20 +139,21 @@ func (e *elements) FindOne(ctx context.Context, by FindElementStrategy, value st
 	}
 	return webElement{
 		wid:     id,
-		sid:     e.id,
-		request: e.request,
+		sid:     w.sid,
+		request: w.request,
 	}, nil
 }
 
-func (e *elements) Find(ctx context.Context, by FindElementStrategy, value string) ([]WebElement, error) {
+// Find finds multiple children elements.
+func (w webElement) Find(ctx context.Context, by FindElementStrategy, value string) ([]WebElement, error) {
 	if len(value) == 0 {
 		return nil, ErrInvalidArguments
 	}
 	p := Params{
-		"value": value,
 		"using": by,
+		"value": value,
 	}
-	resp, err := e.request.Do(ctx, http.MethodPost, "/session/"+e.id+"/elements", p)
+	resp, err := w.request.Do(ctx, http.MethodPost, "/session/"+w.sid+"/element/"+w.wid+"/elements", p)
 	if err != nil {
 		return nil, err
 	}
@@ -179,29 +169,124 @@ func (e *elements) Find(ctx context.Context, by FindElementStrategy, value strin
 		}
 		webElements[i] = webElement{
 			wid:     id,
-			sid:     e.id,
-			request: e.request,
+			sid:     w.sid,
+			request: w.request,
 		}
 	}
 	return webElements, nil
 }
 
-func (e *elements) Active(ctx context.Context) (WebElement, error) {
-	resp, err := e.request.Do(ctx, http.MethodGet, "/session/"+e.id+"/element/active", nil)
+// TagName returns the element's name.
+func (w webElement) TagName(ctx context.Context) (s string, err error) {
+	resp, err := w.request.Do(ctx, http.MethodGet, "/session/"+w.sid+"/element/"+w.wid+"/name", nil)
 	if err != nil {
-		return nil, err
+		return s, err
 	}
-	var er elemResp
-	if err := json.Unmarshal(resp.Value, &er); err != nil {
-		return nil, err
+	if resp.Success() {
+		return s, err
 	}
-	id, ok := er.ID()
-	if !ok {
-		return nil, ErrNoSuchElement
+	s = string(resp.Value)
+	return s, nil
+}
+
+// Text returns the text of the element.
+func (w webElement) Text(ctx context.Context) (s string, err error) {
+	resp, err := w.request.Do(ctx, http.MethodGet, "/session/"+w.sid+"/element/"+w.wid+"/text", nil)
+	if err != nil {
+		return "", err
 	}
-	return webElement{
-		wid:     id,
-		sid:     e.id,
-		request: e.request,
-	}, nil
+	if resp.Success() {
+		return s, nil
+	}
+	if err = json.Unmarshal(resp.Value, &s); err != nil {
+		return s, err
+	}
+	return s, nil
+}
+
+// IsSelected returns true if element is selected.
+func (w webElement) IsSelected(ctx context.Context) (flag bool, err error) {
+	resp, err := w.request.Do(ctx, http.MethodGet, "/session/"+w.sid+"/element/"+w.wid+"/selected", nil)
+	if err != nil {
+		return flag, err
+	}
+	if err := json.Unmarshal(resp.Value, &flag); err != nil {
+		return flag, err
+	}
+	return flag, nil
+}
+
+// IsEnabled returns true if the element is enabled.
+func (w webElement) IsEnabled(ctx context.Context) (flag bool, err error) {
+	resp, err := w.request.Do(ctx, http.MethodGet, "/session/"+w.sid+"/element/"+w.wid+"/enabled", nil)
+	if err != nil {
+		return flag, err
+	}
+	if err := json.Unmarshal(resp.Value, &flag); err != nil {
+		return flag, err
+	}
+	return flag, nil
+}
+
+// GetAttribute returns the named attribute of the element.
+func (w webElement) GetAttribute(ctx context.Context, name string) (s string, err error) {
+	if len(name) == 0 {
+		return s, ErrInvalidArguments
+	}
+	resp, err := w.request.Do(ctx, http.MethodGet, "/session/"+w.sid+"/element/"+w.wid+"/attribute/"+name, nil)
+	if err != nil {
+		return s, err
+	}
+	if resp.Success() {
+		return s, nil
+	}
+	if err = json.Unmarshal(resp.Value, &s); err != nil {
+		return s, err
+	}
+	return s, nil
+}
+
+// GetProperty returns the value of the specified property of the element.
+func (w webElement) GetProperty(ctx context.Context, name string) (s string, err error) {
+	if len(name) == 0 {
+		return s, ErrInvalidArguments
+	}
+	resp, err := w.request.Do(ctx, http.MethodGet, "/session/"+w.sid+"/element/"+w.wid+"/property/"+name, nil)
+	if err != nil {
+		return "", err
+	}
+	if resp.Success() {
+		return s, nil
+	}
+	if err = json.Unmarshal(resp.Value, &s); err != nil {
+		return s, err
+	}
+	return s, nil
+}
+
+// GetCSSValue returns the value of the specified CSS property of the element.
+func (w webElement) GetCSSValue(ctx context.Context, name string) (s string, err error) {
+	if len(name) == 0 {
+		return s, ErrInvalidArguments
+	}
+	resp, err := w.request.Do(ctx, http.MethodGet, "/session/"+w.sid+"/element/"+w.wid+"/css/"+name, nil)
+	if err != nil {
+		return "", err
+	}
+	if err = json.Unmarshal(resp.Value, &s); err != nil {
+		return s, err
+	}
+	return s, nil
+}
+
+// Rect returns the element's size.
+func (w webElement) Rect(ctx context.Context) (r Rect, err error) {
+	resp, err := w.request.Do(ctx, http.MethodGet, "/session/"+w.sid+"/element/"+w.wid+"/rect", nil)
+	if err != nil {
+		return r, err
+	}
+	if err := json.Unmarshal(resp.Value, &r); err != nil {
+		return r, err
+	}
+	return r, nil
 }
