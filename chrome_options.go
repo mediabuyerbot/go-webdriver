@@ -283,7 +283,7 @@ func LoadChromeExtension(extensionPath string) (base64 string, err error) {
 		return base64, crx3.ErrUnsupportedFileFormat
 	}
 
-	b, err := extension.ToBase64()
+	b, err := extension.Base64()
 	if err != nil {
 		return base64, err
 	}
