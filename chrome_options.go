@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/mediabuyerbot/go-crx3"
-	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
+	"github.com/mediabuyerbot/go-webdriver/pkg/w3cproto"
 )
 
 const (
@@ -70,81 +70,81 @@ var ErrBase64Format = errors.New("webdriver: string does not match format base64
 
 type ChromeOptionsBuilder struct {
 	//W3C Capabilities
-	capabilities w3c.Capabilities
+	capabilities w3cproto.Capabilities
 
 	// Chrome options
-	chromeCapabilities w3c.Capabilities
+	chromeCapabilities w3cproto.Capabilities
 	extensions         []string
 	excludeSwitches    []string
 	windowTypes        []string
-	localState         w3c.Capabilities
+	localState         w3cproto.Capabilities
 	args               []string
-	pref               w3c.Capabilities
+	pref               w3cproto.Capabilities
 
 	mobileEmulation *MobileEmulation
 	perfLoggingPref *PerfLoggingPreferences
 
-	firstMatch []w3c.Capabilities
+	firstMatch []w3cproto.Capabilities
 }
 
 func ChromeOptions() *ChromeOptionsBuilder {
 	return &ChromeOptionsBuilder{
-		capabilities: w3c.MakeCapabilities(),
+		capabilities: w3cproto.MakeCapabilities(),
 
-		chromeCapabilities: w3c.MakeCapabilities(),
+		chromeCapabilities: w3cproto.MakeCapabilities(),
 		extensions:         make([]string, 0),
 		excludeSwitches:    make([]string, 0),
 		windowTypes:        make([]string, 0),
-		localState:         w3c.MakeCapabilities(),
+		localState:         w3cproto.MakeCapabilities(),
 		args:               make([]string, 0),
-		pref:               w3c.MakeCapabilities(),
+		pref:               w3cproto.MakeCapabilities(),
 
-		firstMatch: make([]w3c.Capabilities, 0),
+		firstMatch: make([]w3cproto.Capabilities, 0),
 	}
 }
 
 func (b *ChromeOptionsBuilder) SetBrowserName(name string) *ChromeOptionsBuilder {
-	_ = w3c.SetBrowserName(b.capabilities, name)
+	_ = w3cproto.SetBrowserName(b.capabilities, name)
 	return b
 }
 
 func (b *ChromeOptionsBuilder) SetBrowserVersion(version string) *ChromeOptionsBuilder {
-	_ = w3c.SetBrowserVersion(b.capabilities, version)
+	_ = w3cproto.SetBrowserVersion(b.capabilities, version)
 	return b
 }
 
 func (b *ChromeOptionsBuilder) SetPlatformName(platform string) *ChromeOptionsBuilder {
-	_ = w3c.SetPlatformName(b.capabilities, w3c.Platform(platform))
+	_ = w3cproto.SetPlatformName(b.capabilities, w3cproto.Platform(platform))
 	return b
 }
 
 func (b *ChromeOptionsBuilder) SetAcceptInsecureCerts(flag bool) *ChromeOptionsBuilder {
-	_ = w3c.SetAcceptInsecureCerts(b.capabilities, flag)
+	_ = w3cproto.SetAcceptInsecureCerts(b.capabilities, flag)
 	return b
 }
 
 func (b *ChromeOptionsBuilder) SetPageLoadStrategy(strategy string) *ChromeOptionsBuilder {
-	_ = w3c.SetPageLoadStrategy(b.capabilities, strategy)
+	_ = w3cproto.SetPageLoadStrategy(b.capabilities, strategy)
 	return b
 }
 
 func (b *ChromeOptionsBuilder) SetWindowRect(flag bool) *ChromeOptionsBuilder {
-	_ = w3c.SetWindowRect(b.capabilities, flag)
+	_ = w3cproto.SetWindowRect(b.capabilities, flag)
 	return b
 }
 
-func (b *ChromeOptionsBuilder) SetProxy(proxy *w3c.Proxy) *ChromeOptionsBuilder {
-	_ = w3c.SetProxy(b.capabilities, proxy)
+func (b *ChromeOptionsBuilder) SetProxy(proxy *w3cproto.Proxy) *ChromeOptionsBuilder {
+	_ = w3cproto.SetProxy(b.capabilities, proxy)
 	return b
 }
 
 func (b *ChromeOptionsBuilder) SetUnhandledPromptBehavior(prompt string) *ChromeOptionsBuilder {
-	_ = w3c.SetUnhandledPromptBehavior(b.capabilities, prompt)
+	_ = w3cproto.SetUnhandledPromptBehavior(b.capabilities, prompt)
 	return b
 }
 
-func (b *ChromeOptionsBuilder) SetTimeout(timeout w3c.Timeout) *ChromeOptionsBuilder {
-	_ = w3c.SetTimeout(b.capabilities, timeout)
+func (b *ChromeOptionsBuilder) SetTimeout(timeout w3cproto.Timeout) *ChromeOptionsBuilder {
+	_ = w3cproto.SetTimeout(b.capabilities, timeout)
 	return b
 }
 
@@ -213,7 +213,7 @@ func (b *ChromeOptionsBuilder) AddWindowTypes(types ...string) *ChromeOptionsBui
 
 func (b *ChromeOptionsBuilder) AddFirstMatch(key string, value interface{}) *ChromeOptionsBuilder {
 	if len(key) > 0 {
-		cap := w3c.MakeCapabilities()
+		cap := w3cproto.MakeCapabilities()
 		cap.Set(key, value)
 		b.firstMatch = append(b.firstMatch, cap)
 	}
@@ -222,19 +222,19 @@ func (b *ChromeOptionsBuilder) AddFirstMatch(key string, value interface{}) *Chr
 
 func (b *ChromeOptionsBuilder) MobileEmulation() *MobileEmulation {
 	if b.mobileEmulation == nil {
-		b.mobileEmulation = &MobileEmulation{opts: w3c.MakeCapabilities()}
+		b.mobileEmulation = &MobileEmulation{opts: w3cproto.MakeCapabilities()}
 	}
 	return b.mobileEmulation
 }
 
 func (b *ChromeOptionsBuilder) PerfLoggingPreferences() *PerfLoggingPreferences {
 	if b.perfLoggingPref == nil {
-		b.perfLoggingPref = &PerfLoggingPreferences{opts: w3c.MakeCapabilities()}
+		b.perfLoggingPref = &PerfLoggingPreferences{opts: w3cproto.MakeCapabilities()}
 	}
 	return b.perfLoggingPref
 }
 
-func (b *ChromeOptionsBuilder) Build() w3c.BrowserOptions {
+func (b *ChromeOptionsBuilder) Build() w3cproto.BrowserOptions {
 	if len(b.extensions) > 0 {
 		b.chromeCapabilities[ChromeCapabilityExtensionName] = b.extensions
 	}
@@ -262,7 +262,7 @@ func (b *ChromeOptionsBuilder) Build() w3c.BrowserOptions {
 
 	b.capabilities.Set(ChromeOptionsKey, b.chromeCapabilities)
 
-	return w3c.NewBrowserOptions(b.capabilities, b.firstMatch)
+	return w3cproto.NewBrowserOptions(b.capabilities, b.firstMatch)
 }
 
 func LoadChromeExtension(extensionPath string) (base64 string, err error) {
@@ -305,7 +305,7 @@ const (
 )
 
 type MobileEmulation struct {
-	opts w3c.Capabilities
+	opts w3cproto.Capabilities
 }
 
 func (e *MobileEmulation) Set(key string, value interface{}) *MobileEmulation {
@@ -337,7 +337,7 @@ const (
 )
 
 type PerfLoggingPreferences struct {
-	opts w3c.Capabilities
+	opts w3cproto.Capabilities
 }
 
 func (pp *PerfLoggingPreferences) Set(key string, value interface{}) *PerfLoggingPreferences {
@@ -377,8 +377,8 @@ type DeviceMetrics struct {
 	Touch      bool    `json:"touch,omitempty"`
 }
 
-func (dm *DeviceMetrics) Capabilities() w3c.Capabilities {
-	return w3c.Capabilities{
+func (dm *DeviceMetrics) Capabilities() w3cproto.Capabilities {
+	return w3cproto.Capabilities{
 		"width":      dm.Width,
 		"height":     dm.Height,
 		"pixelRatio": dm.PixelRatio,

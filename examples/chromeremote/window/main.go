@@ -1,17 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/mediabuyerbot/go-webdriver"
-	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
+	"github.com/mediabuyerbot/go-webdriver/pkg/w3cproto"
 )
 
 func main() {
 	// run browser
-	browser, err := webdriver.Remote("http://localhost:9515", nil)
+	ctx := context.Background()
+	browser, err := webdriver.OpenRemoteBrowser(ctx, "http://localhost:9515", nil)
 	if err != nil {
 		exitWithError(err)
 	}
@@ -25,7 +27,7 @@ func main() {
 		time.Sleep(time.Second)
 	}()
 
-	tabs := make([]w3c.WindowHandle, 10)
+	tabs := make([]w3cproto.WindowHandle, 10)
 
 	// open windows
 	if err := openTabs(browser, tabs); err != nil {
@@ -61,7 +63,7 @@ func sleep() {
 	time.Sleep(time.Second)
 }
 
-func openTabs(browser *webdriver.Browser, tabs []w3c.WindowHandle) error {
+func openTabs(browser *webdriver.Browser, tabs []w3cproto.WindowHandle) error {
 	log.Println("1. openTabs")
 
 	tab, err := browser.ActiveWindow()
@@ -80,12 +82,12 @@ func openTabs(browser *webdriver.Browser, tabs []w3c.WindowHandle) error {
 	return nil
 }
 
-func switchTabs(browser *webdriver.Browser, tabs []w3c.WindowHandle) error {
+func switchTabs(browser *webdriver.Browser, tabs []w3cproto.WindowHandle) error {
 	log.Println("2. switchTabs")
 
 	for i := 0; i < len(tabs)*3; i++ {
 		tab := tabs[i%len(tabs)]
-		if err := browser.SwitchTo(tab); !w3c.IsUnknownWindowHandler(err) {
+		if err := browser.SwitchTo(tab); !w3cproto.IsUnknownWindowHandler(err) {
 			return err
 		}
 		wait()
@@ -116,7 +118,7 @@ func switchSize(browser *webdriver.Browser) error {
 
 	sleep()
 	log.Println("3.2 -restore")
-	if _, err := browser.ResizeWindow(w3c.Rect{
+	if _, err := browser.ResizeWindow(w3cproto.Rect{
 		Width:  width,
 		Height: height,
 		X:      x,
@@ -162,7 +164,7 @@ func stats(browser *webdriver.Browser) error {
 	return nil
 }
 
-func closeTabs(browser *webdriver.Browser, tabs []w3c.WindowHandle) error {
+func closeTabs(browser *webdriver.Browser, tabs []w3cproto.WindowHandle) error {
 	log.Println("5. closeTabs")
 	tab, err := browser.ActiveWindow()
 	if err != nil {

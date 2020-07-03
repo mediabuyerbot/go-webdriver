@@ -3,12 +3,12 @@ package webdriver
 import (
 	"context"
 
-	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
+	"github.com/mediabuyerbot/go-webdriver/pkg/w3cproto"
 )
 
-// Remote creates a new instance of the remote browser.
-func Remote(addr string, opts w3c.BrowserOptions) (*Browser, error) {
-	sess, err := NewSession(addr, opts)
+// OpenRemoteBrowser creates a new instance of the remote browser.
+func OpenRemoteBrowser(ctx context.Context, addr string, opts w3cproto.BrowserOptions) (*Browser, error) {
+	sess, err := NewSession(ctx, addr, opts)
 	if err != nil {
 		return nil, err
 	}

@@ -3,16 +3,16 @@ package webdriver
 import (
 	"context"
 
-	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
+	"github.com/mediabuyerbot/go-webdriver/pkg/w3cproto"
 )
 
 type selector struct {
 	id       string
-	strategy w3c.FindElementStrategy
+	strategy w3cproto.FindElementStrategy
 }
 
 type WebElement struct {
-	elem w3c.WebElement
+	elem w3cproto.WebElement
 	ctx  context.Context
 	q    selector
 }
@@ -22,221 +22,221 @@ func (w WebElement) Attr(name string) (string, error) {
 }
 
 func (w WebElement) PressNullKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.NullKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.NullKey)
 }
 
 func (w WebElement) PressCancelKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.CancelKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.CancelKey)
 }
 
 func (w WebElement) PressHelpKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.HelpKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.HelpKey)
 }
 
 func (w WebElement) PressBackspaceKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.BackspaceKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.BackspaceKey)
 }
 
 func (w WebElement) PressTabKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.TabKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.TabKey)
 }
 
 func (w WebElement) PressClearKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.ClearKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.ClearKey)
 }
 
 func (w WebElement) PressReturnKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.ReturnKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.ReturnKey)
 }
 
 func (w WebElement) PressEnterKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.EnterKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.EnterKey)
 }
 
 func (w WebElement) PressShiftKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.ShiftKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.ShiftKey)
 }
 
 func (w WebElement) PressControlKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.ControlKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.ControlKey)
 }
 
 func (w WebElement) PressAltKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.AltKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.AltKey)
 }
 
 func (w WebElement) PressPauseKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.PauseKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.PauseKey)
 }
 
 func (w WebElement) PressEscapeKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.EscapeKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.EscapeKey)
 }
 
 func (w WebElement) PressSpaceKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.SpaceKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.SpaceKey)
 }
 
 func (w WebElement) PressPageUpKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.PageUpKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.PageUpKey)
 }
 
 func (w WebElement) PressPageDownKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.PageDownKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.PageDownKey)
 }
 
 func (w WebElement) PressEndKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.EndKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.EndKey)
 }
 
 func (w WebElement) PressHomeKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.HomeKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.HomeKey)
 }
 
 func (w WebElement) PressLeftArrowKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.LeftArrowKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.LeftArrowKey)
 }
 
 func (w WebElement) PressUpArrowKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.UpArrowKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.UpArrowKey)
 }
 
 func (w WebElement) PressRightArrowKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.RightArrowKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.RightArrowKey)
 }
 
 func (w WebElement) PressDownArrowKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.DownArrowKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.DownArrowKey)
 }
 
 func (w WebElement) PressInsertKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.InsertKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.InsertKey)
 }
 
 func (w WebElement) PressDeleteKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.DeleteKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.DeleteKey)
 }
 
 func (w WebElement) PressSemicolonKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.SemicolonKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.SemicolonKey)
 }
 
 func (w WebElement) PressEqualsKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.EqualsKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.EqualsKey)
 }
 
 func (w WebElement) PressNumpad0Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad0Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad0Key)
 }
 
 func (w WebElement) PressNumpad1Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad1Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad1Key)
 }
 
 func (w WebElement) PressNumpad2Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad2Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad2Key)
 }
 
 func (w WebElement) PressNumpad3Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad3Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad3Key)
 }
 
 func (w WebElement) PressNumpad4Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad4Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad4Key)
 }
 
 func (w WebElement) PressNumpad5Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad5Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad5Key)
 }
 
 func (w WebElement) PressNumpad6Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad6Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad6Key)
 }
 
 func (w WebElement) PressNumpad7Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad7Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad7Key)
 }
 
 func (w WebElement) PressNumpad8Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad8Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad8Key)
 }
 
 func (w WebElement) PressNumpad9Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.Numpad9Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.Numpad9Key)
 }
 
 func (w WebElement) PressMultiplyKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.MultiplyKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.MultiplyKey)
 }
 
 func (w WebElement) PressAddKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.AddKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.AddKey)
 }
 
 func (w WebElement) PressSeparatorKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.SeparatorKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.SeparatorKey)
 }
 
 func (w WebElement) PressSubstractKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.SubstractKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.SubstractKey)
 }
 
 func (w WebElement) PressDecimalKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.DecimalKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.DecimalKey)
 }
 
 func (w WebElement) PressDivideKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.DivideKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.DivideKey)
 }
 
 func (w WebElement) PressF1Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F1Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F1Key)
 }
 
 func (w WebElement) PressF2Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F2Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F2Key)
 }
 
 func (w WebElement) PressF3Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F3Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F3Key)
 }
 
 func (w WebElement) PressF4Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F4Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F4Key)
 }
 
 func (w WebElement) PressF5Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F5Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F5Key)
 }
 
 func (w WebElement) PressF6Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F6Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F6Key)
 }
 
 func (w WebElement) PressF7Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F7Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F7Key)
 }
 
 func (w WebElement) PressF8Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F8Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F8Key)
 }
 
 func (w WebElement) PressF10Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F9Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F9Key)
 }
 
 func (w WebElement) PressF11Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F9Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F9Key)
 }
 
 func (w WebElement) PressF12Key() error {
-	return w.elem.SendKeys(w.ctx, w3c.F9Key)
+	return w.elem.SendKeys(w.ctx, w3cproto.F9Key)
 }
 
 func (w WebElement) PressMetaKey() error {
-	return w.elem.SendKeys(w.ctx, w3c.MetaKey)
+	return w.elem.SendKeys(w.ctx, w3cproto.MetaKey)
 }
 
-func (w WebElement) SendKeys(keys ...w3c.Key) error {
+func (w WebElement) SendKeys(keys ...w3cproto.Key) error {
 	return w.elem.SendKeys(w.ctx, keys...)
 }

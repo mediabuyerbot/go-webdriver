@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
+	"github.com/mediabuyerbot/go-webdriver/pkg/w3cproto"
 )
 
 type Driver interface {
@@ -60,17 +60,17 @@ func (b *Browser) Source() (source string, err error) {
 }
 
 // Cookies returns an all cookies visible to the current page.
-func (b *Browser) Cookies() ([]w3c.Cookie, error) {
+func (b *Browser) Cookies() ([]w3cproto.Cookie, error) {
 	return b.sess.Cookies().All(b.ctx)
 }
 
 // GetCookie returns a cookie by name visible to the current page.
-func (b *Browser) GetCookie(name string) (w3c.Cookie, error) {
+func (b *Browser) GetCookie(name string) (w3cproto.Cookie, error) {
 	return b.sess.Cookies().Get(b.ctx, name)
 }
 
 // AddCookie adds a cookie.
-func (b *Browser) AddCookie(c w3c.Cookie) error {
+func (b *Browser) AddCookie(c w3cproto.Cookie) error {
 	return b.sess.Cookies().Add(b.ctx, c)
 }
 
@@ -120,7 +120,7 @@ func (b *Browser) Forward() error {
 }
 
 // GetTimeout returns the timeouts implicit, pageLoad, script.
-func (b *Browser) GetTimeout() (w3c.Timeout, error) {
+func (b *Browser) GetTimeout() (w3cproto.Timeout, error) {
 	return b.sess.Timeouts().Get(b.ctx)
 }
 
@@ -144,26 +144,26 @@ func (b *Browser) SetScriptTimeout(d time.Duration) error {
 }
 
 // Capabilities returns the browser capabilities.
-func (b *Browser) Capabilities() w3c.Capabilities {
+func (b *Browser) Capabilities() w3cproto.Capabilities {
 	return b.sess.Session().Capabilities()
 }
 
 // Status returns information about whether a browser  is in a state
 // in which it can create new sessions, but may additionally include arbitrary
 // meta information that is specific to the implementation.
-func (b *Browser) Status() (w3c.Status, error) {
+func (b *Browser) Status() (w3cproto.Status, error) {
 	return b.sess.Session().Status(b.ctx)
 }
 
 // FindElementByID finds an element on the page, starting from the document root.
 func (b *Browser) FindElementByID(id string) (we WebElement, err error) {
 	if len(id) == 0 {
-		return we, w3c.ErrInvalidArguments
+		return we, w3cproto.ErrInvalidArguments
 	}
 	if !strings.HasPrefix(id, "#") {
 		id = "#" + id
 	}
-	w3cWebElem, err := b.sess.Elements().FindOne(b.ctx, w3c.ByCSSSelector, id)
+	w3cWebElem, err := b.sess.Elements().FindOne(b.ctx, w3cproto.ByCSSSelector, id)
 	if err != nil {
 		return we, err
 	}
@@ -172,14 +172,14 @@ func (b *Browser) FindElementByID(id string) (we WebElement, err error) {
 		ctx:  b.ctx,
 		q: selector{
 			id:       id,
-			strategy: w3c.ByCSSSelector,
+			strategy: w3cproto.ByCSSSelector,
 		},
 	}, nil
 }
 
 // FindElementByXPATH finds an element on the page, starting from the document root.
 func (b *Browser) FindElementByXPATH(xpath string) (we WebElement, err error) {
-	w3cWebElem, err := b.sess.Elements().FindOne(b.ctx, w3c.ByXPATH, xpath)
+	w3cWebElem, err := b.sess.Elements().FindOne(b.ctx, w3cproto.ByXPATH, xpath)
 	if err != nil {
 		return we, err
 	}
@@ -188,14 +188,14 @@ func (b *Browser) FindElementByXPATH(xpath string) (we WebElement, err error) {
 		ctx:  b.ctx,
 		q: selector{
 			id:       xpath,
-			strategy: w3c.ByXPATH,
+			strategy: w3cproto.ByXPATH,
 		},
 	}, nil
 }
 
 // FindElementByLinkText finds an element on the page, starting from the document root.
 func (b *Browser) FindElementByLinkText(text string) (we WebElement, err error) {
-	w3cWebElem, err := b.sess.Elements().FindOne(b.ctx, w3c.ByLinkText, text)
+	w3cWebElem, err := b.sess.Elements().FindOne(b.ctx, w3cproto.ByLinkText, text)
 	if err != nil {
 		return we, err
 	}
@@ -204,13 +204,13 @@ func (b *Browser) FindElementByLinkText(text string) (we WebElement, err error) 
 		ctx:  b.ctx,
 		q: selector{
 			id:       text,
-			strategy: w3c.ByLinkText,
+			strategy: w3cproto.ByLinkText,
 		},
 	}, nil
 }
 
 // Windows returns the list of all window handles(ids) available to the session.
-func (b *Browser) Windows() (ids []w3c.WindowHandle, err error) {
+func (b *Browser) Windows() (ids []w3cproto.WindowHandle, err error) {
 	handles, err := b.sess.Context().GetWindowHandles(b.ctx)
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func (b *Browser) Windows() (ids []w3c.WindowHandle, err error) {
 }
 
 // ActiveWindow returns the ID of current window handle.
-func (b *Browser) ActiveWindow() (id w3c.WindowHandle, err error) {
+func (b *Browser) ActiveWindow() (id w3cproto.WindowHandle, err error) {
 	handle, err := b.sess.Context().GetWindowHandle(b.ctx)
 	if err != nil {
 		return id, err
@@ -234,7 +234,7 @@ func (b *Browser) CloseActiveWindow() error {
 }
 
 // CloseWindow closes a window.
-func (b *Browser) CloseWindow(id w3c.WindowHandle) error {
+func (b *Browser) CloseWindow(id w3cproto.WindowHandle) error {
 	if id.IsEmpty() {
 		return nil
 	}
@@ -245,8 +245,8 @@ func (b *Browser) CloseWindow(id w3c.WindowHandle) error {
 }
 
 // OpenTab creates a new tab.
-func (b *Browser) OpenTab() (id w3c.WindowHandle, err error) {
-	win, err := b.sess.Context().NewWindow(b.ctx, w3c.Tab)
+func (b *Browser) OpenTab() (id w3cproto.WindowHandle, err error) {
+	win, err := b.sess.Context().NewWindow(b.ctx, w3cproto.Tab)
 	if err != nil {
 		return id, err
 	}
@@ -254,8 +254,8 @@ func (b *Browser) OpenTab() (id w3c.WindowHandle, err error) {
 }
 
 // OpenWindow creates a new window.
-func (b *Browser) OpenWindow() (id w3c.WindowHandle, err error) {
-	win, err := b.sess.Context().NewWindow(b.ctx, w3c.Win)
+func (b *Browser) OpenWindow() (id w3cproto.WindowHandle, err error) {
+	win, err := b.sess.Context().NewWindow(b.ctx, w3cproto.Win)
 	if err != nil {
 		return id, err
 	}
@@ -263,15 +263,15 @@ func (b *Browser) OpenWindow() (id w3c.WindowHandle, err error) {
 }
 
 // SwitchTo switches between tabs or windows.
-func (b *Browser) SwitchTo(id w3c.WindowHandle) error {
+func (b *Browser) SwitchTo(id w3cproto.WindowHandle) error {
 	if id.IsEmpty() {
-		return w3c.ErrUnknownWindowHandler
+		return w3cproto.ErrUnknownWindowHandler
 	}
 	return b.sess.Context().SwitchToWindow(b.ctx, id)
 }
 
 // SwitchToFrame changes focus to another frame on the page.
-func (b *Browser) SwitchToFrame(id w3c.FrameHandle) error {
+func (b *Browser) SwitchToFrame(id w3cproto.FrameHandle) error {
 	return b.sess.Context().SwitchToFrame(b.ctx, id)
 }
 
@@ -281,7 +281,7 @@ func (b *Browser) SwitchToParentFrame() error {
 }
 
 // ResizeWindow alters the size or position of the operating system window.
-func (b *Browser) ResizeWindow(r w3c.Rect) (winRect w3c.Rect, err error) {
+func (b *Browser) ResizeWindow(r w3cproto.Rect) (winRect w3cproto.Rect, err error) {
 	return b.sess.Context().SetRect(b.ctx, r)
 }
 

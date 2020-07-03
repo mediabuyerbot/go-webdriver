@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/mediabuyerbot/go-webdriver/pkg/w3c"
+	"github.com/mediabuyerbot/go-webdriver/pkg/w3cproto"
 
 	"github.com/mediabuyerbot/go-webdriver"
 )
@@ -24,8 +24,8 @@ func main() {
 	opts.
 		SetLocalState("key", "value")
 
-	_ = opts.SetProxy(&w3c.Proxy{
-		Type:     w3c.ProxyDirectType,
+	_ = opts.SetProxy(&w3cproto.Proxy{
+		Type:     w3cproto.ProxyDirectType,
 		HTTPPort: 8080,
 	})
 

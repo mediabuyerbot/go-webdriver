@@ -65,7 +65,7 @@ func Chrome(opts *ChromeOptionsBuilder) (*Browser, error) {
 	}
 
 	addr := fmt.Sprintf("http://localhost:%d", port)
-	sess, err := NewSession(addr, opts.Build())
+	sess, err := NewSession(ctx, addr, opts.Build())
 	if err != nil {
 		_ = driver.Stop(ctx)
 		return nil, err

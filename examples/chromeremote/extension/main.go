@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -19,8 +20,10 @@ func main() {
 	// add extension
 	_ = opts.AddExtension(ext)
 
+	ctx := context.Background()
+
 	// creates a new instance of the remote browser
-	browser, err := webdriver.Remote("http://localhost:9515", opts.Build())
+	browser, err := webdriver.OpenRemoteBrowser(ctx, "http://localhost:9515", opts.Build())
 	if err != nil {
 		exitWithError(err)
 	}
